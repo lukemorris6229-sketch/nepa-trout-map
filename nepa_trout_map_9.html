@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Northeast PA Trout Map</title>
+
+<style>
+:root{--bg:#10191d;--panel:#16232a;--panel2:#1c2d35;--fg:#e8f1f3;--muted:#94a9b0;--line:#2a4048;--accent:#38c6d9;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 var(--font)}
+#app{display:flex;height:100%}
+#panel{width:350px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;z-index:1000}
+#panel header{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+#panel h1{font-size:18px;margin:0 0 2px;letter-spacing:-.01em}
+#panel .sub{margin:0;color:var(--muted);font-size:12px}
+#scroll{overflow:auto;flex:1;min-height:0;padding:6px 0 16px}
+details{border-bottom:1px solid var(--line);padding:0 16px}
+summary{cursor:pointer;padding:11px 0;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;color:var(--muted)} details[open]>summary::after{content:"–"}
+.body{padding:0 0 14px;display:flex;flex-direction:column;gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+select,input[type=search]{font:inherit;font-size:14px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;width:100%;text-transform:none;letter-spacing:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk{display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.sw{width:22px;height:5px;border-radius:3px;flex:none}.sw.box{height:12px;width:16px;border-radius:3px;opacity:.9}
+.legend div{display:flex;align-items:center;gap:9px;font-size:13px;margin:3px 0}
+.stat{font-size:12px;color:var(--muted)} .stat b{color:var(--fg)}
+#detail{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
+#detail h2{margin:0 0 2px;font-size:17px;line-height:1.2}
+#detail .tag{color:var(--muted);font-size:12px;margin-bottom:8px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:13px} dt{color:var(--muted)} dd{margin:0;overflow-wrap:anywhere}
+.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.sch{margin-top:8px;font-size:12px}.sch .e{padding:5px 0;border-top:1px solid rgba(128,128,128,.3);opacity:.7}.sch .e.up{opacity:1}.sch .e.up b{color:var(--accent)}.sch .k{color:var(--muted,#7b8a90)}.warn{color:#d9822b;font-weight:600}
+.row:hover{color:var(--accent)} .row.active{color:var(--accent);font-weight:600}.inl{padding:8px 10px;margin:2px 0 6px;border-left:3px solid var(--accent);background:var(--panel2);border-radius:0 6px 6px 0}.row small{color:var(--muted);white-space:nowrap}
+#map{flex:1;min-width:0;background:#1a262b}
+#banner{position:absolute;left:366px;right:12px;top:12px;z-index:1200;background:#4a2b12;border:1px solid #a8641f;color:#ffd9a8;padding:8px 12px;border-radius:8px;font-size:13px;display:none}
+.leaflet-control-locate{width:34px;height:34px;line-height:32px;text-align:center;background:#fff;border-radius:4px;cursor:pointer;font-size:18px;color:#222;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+#toggle{display:none}
+.tt{font:12px var(--font)}
+.leaflet-popup.pop2 .leaflet-popup-content-wrapper{background:#16232a;color:#e8f1f3;border:1px solid #38c6d9;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.leaflet-popup.pop2 .leaflet-popup-tip{background:#16232a;border:1px solid #38c6d9}
+.leaflet-popup.pop2 .leaflet-popup-content{margin:11px 13px;font:12px/1.4 var(--font);width:auto!important}
+.leaflet-popup.pop2 a.leaflet-popup-close-button{color:#94a9b0}
+.pop2 b.n{font-size:15px}.pop2 .k{color:#94a9b0}.pop2 .r{display:flex;justify-content:space-between;gap:10px;margin-top:3px}.pop2 .r span:last-child{text-align:right}
+@keyframes selpulse{0%,100%{stroke-opacity:.2}50%{stroke-opacity:.65}}path.selglow{animation:selpulse 1.3s ease-in-out infinite}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.cgrid .chk{font-size:13px}.cgrid .chk small{color:var(--muted)}
+.cgrid h4{grid-column:1/-1;margin:6px 0 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.btn{font:inherit;font-size:13px;font-weight:600;color:#06222a;background:var(--accent);border:0;border-radius:6px;padding:9px;cursor:pointer}.btn.alt{background:var(--panel2);color:var(--fg);border:1px solid var(--line)}.btn:disabled{opacity:.5;cursor:default}
+.leaflet-tooltip.tt2{white-space:normal;width:250px;padding:9px 11px;background:#16232a;color:#e8f1f3;border:1px solid #38c6d9;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.45);font:12px/1.4 var(--font)}
+.leaflet-tooltip.tt2:before{display:none}
+.tt2 b.n{font-size:14px}.tt2 .k{color:#94a9b0}.tt2 .r{display:flex;justify-content:space-between;gap:8px;margin-top:2px}.tt2 .r span:last-child{text-align:right}
+@media(max-width:760px){
+  #app{flex-direction:column-reverse}
+  #panel{width:100%;max-height:46%;border-right:0;border-top:1px solid var(--line)}
+  #banner{left:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <header><h1>Northeast PA Trout Map</h1><p class="sub">PFBC stream classes, stocking and regulations over public land. Data loads live from state servers, county by county.</p><p class="sub" id="status" style="margin-top:4px">Loading data…</p></header>
+    <div id="detail"><p style="margin:0;color:var(--muted)">Tap a stream or a row in the list for details.</p></div>
+    <div id="scroll">
+      <details open><summary>Counties</summary><div class="body">
+        <div id="counties" class="cgrid"></div>
+        <div class="grid2"><button id="btnLoad" class="btn">Load checked</button><button id="btnAll" class="btn alt">Check all NE PA</button></div>
+        <button id="btnClear" class="btn alt">Clear checked counties</button>
+        <div class="stat" id="cstat">Checked counties control the Streams list and the map: a stream is listed when it starts or ends in a checked county. Each county loads about 10 data layers, so loading many takes a minute or two.</div>
+      </div></details>
+      <details open><summary>Map layers</summary><div class="body">
+        <label class="f">Basemap<select id="basemap"><option value="topo">USGS Topo</option><option value="imagery">USGS Imagery + Topo</option><option value="osm">OpenStreetMap</option></select></label>
+        <label class="chk"><input type="checkbox" id="lyWild" checked><span class="sw" style="background:#ffe600"></span>Wild trout streams</label>
+        <label class="chk"><input type="checkbox" id="lyStocked" checked><span class="sw" style="background:#00e5ff"></span>Stocked sections</label>
+        <label class="chk"><input type="checkbox" id="lySpecial" checked><span class="sw" style="background:repeating-linear-gradient(90deg,#b36bff 0 5px,transparent 5px 8px)"></span>Special regulation sections</label>
+        <label class="chk"><input type="checkbox" id="lySGL" checked><span class="sw box" style="background:#e8a33a"></span>State Game Lands</label>
+        <label class="chk"><input type="checkbox" id="lySF" checked><span class="sw box" style="background:#3fae63"></span>State Forest</label>
+        <label class="chk"><input type="checkbox" id="lySP" checked><span class="sw box" style="background:#8b63e0"></span>State Parks</label>
+        <label class="chk"><input type="checkbox" id="lyCons" checked><span class="sw box" style="background:#19b5a5"></span>Other open public land (county, local, federal, land trust)</label>
+        <label class="chk"><input type="checkbox" id="lyConsL" checked><span class="sw box" style="background:#ffd400"></span>Restricted / unknown access land</label>
+        <label class="chk"><input type="checkbox" id="lyPfbc" checked><span class="sw box" style="background:#3b82f6"></span>PFBC-owned property</label>
+        <label class="chk"><input type="checkbox" id="lyCounty" checked><span class="sw" style="background:#fff"></span>County line</label>
+      </div></details>
+      <details open><summary>Color streams by</summary><div class="body">
+        <label class="f"><select id="colorBy"><option value="tier">Trout classification</option><option value="species">Species (wild survey or stocked)</option><option value="public">Public land share</option><option value="access">Public / private access (by section)</option></select></label>
+        <div class="legend" id="legend"></div>
+      </div></details>
+      <details open><summary>Highlight</summary><div class="body">
+        <label class="f">Highlight streams that are<select id="hlBy">
+          <option value="off">Off (show all equally)</option><option value="classA">Class A wild trout</option>
+          <option value="brook">Brook trout</option><option value="brown">Brown trout</option><option value="rainbow">Rainbow trout</option>
+          <option value="stocked">Stocked</option><option value="yr">Stocked year-round</option><option value="schAny">On the stocking schedule</option><option value="schUp">Stocking in the next 30 days</option><option value="reg">Special regulation</option>
+          <option value="pub50">50%+ public land</option><option value="pub75">75%+ public land</option></select></label>
+        <div class="grid2">
+          <label class="f">Everything else<select id="hideMode"><option value="dim">Dim it</option><option value="hide">Hide it</option></select></label>
+          <label class="f">Line weight<select id="weight"><option value="4">Normal</option><option value="6" selected>Bold</option><option value="8">Extra bold</option></select></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="glow" checked>White glow on highlighted streams</label>
+        <div class="stat">Streams that match the Filters dropdowns (and this highlight) get bold lines with a white glow on the map; everything else is dimmed or hidden.</div>
+      </div></details>
+      <details><summary>Filters</summary><div class="body">
+        <label class="f">Find a stream<input type="search" id="q" placeholder="Name contains"></label>
+        <div class="grid2">
+          <label class="f">Classification<select id="fTier"><option value="">All</option><option>Class A wild</option><option>Wild trout</option><option>Stocked only</option></select></label>
+          <label class="f">Species<select id="fSpecies"><option value="">All</option><option>Brook trout</option><option>Brown trout</option><option>Rainbow trout</option><option>Golden trout</option><option>Not reported</option></select></label>
+          <label class="f">Stocking<select id="fStocked"><option value="">All</option><option value="Y">Stocked</option><option value="N">Not stocked</option><option value="YR">Open year-round</option></select></label>
+          <label class="f">Regulation<select id="fReg"><option value="">All</option><option value="Y">Special regulation</option></select></label>
+        </div>
+        <label class="f">Land access (sections of each stream)<select id="fAccess"><option value="all">Show all sections</option><option value="pub">Only open public land sections</option><option value="lim">Only restricted / unknown access</option><option value="priv">Only sections with no public-land record</option></select></label>
+        <label class="f">Stocking schedule<select id="fSched"><option value="">Any</option><option value="any">On the posted schedule</option><option value="up30">Stocked in the next 30 days</option><option value="up7">Stocked in the next 7 days</option></select></label>
+        <label class="f">Public land share<select id="fPub"><option value="0">Any</option><option value="1">At least 1%</option><option value="25">25% or more</option><option value="50">50% or more</option><option value="75">75% or more</option></select></label>
+      </div></details>
+      <details open><summary>Streams <span id="cnt" class="stat"></span></summary><div class="body"><div class="stat" id="stat"></div><div id="list"></div></div></details>
+      <details><summary>About this map</summary><div class="body stat">
+        Northeast PA here means Bradford, Carbon, Columbia, Lackawanna, Luzerne, Monroe, Pike, Schuylkill, Sullivan, Susquehanna, Wayne and Wyoming counties, with Lehigh, Northampton, Northumberland and Montour available as nearby extras. Streams that share a name are told apart by location, but two same-named streams within a couple of miles of each other can be merged. Stream classes, stocking and special regulations: Pennsylvania Fish and Boat Commission. Public land: PA DCNR (State Forest, State Parks) and PA Game Commission (State Game Lands). Basemaps: USGS The National Map, OpenStreetMap. Species come from two PFBC sources: Class A wild trout surveys (brook or brown), and 2025 and 2026 stocking records (brook, brown, rainbow, golden). Wild trout streams that are neither Class A nor stocked have no species in any statewide PFBC layer, so they show Not reported. Public land share is calculated on this map from the land boundaries shown (open public land only), so it matches the green sections. It does not use PFBC's own percentage. Land boundaries are simplified for display. Public / private access: a stream section is marked open public land when it falls inside a State Game Land, State Forest, State Park, PFBC property, or a parcel in the PA Conserved Lands layer (PALTA / WeConservePA, via DCNR) whose Access is Open. That layer covers federal, county and municipal land and land-trust easements. Parcels listed Restricted or Unknown are shown in yellow. Everything else has no public-land record and is likely private, but that is not a legal determination. Easements that allow angling on private land are not fully captured. Open land is not always open to fishing, so check posting and permissions. Stocking schedule: the PFBC trout stocking schedule (fbweb.pa.gov/TroutStocking), captured Nov 20, 2026 for the 2026 season (preseason, in-season and fall stockings, with species, meeting place, time and hatchery). It is a saved snapshot, not live, and is matched to streams by name and county, so a few streams with unusual names may show none. Dates and places can change; PFBC posts the next season's schedule in winter, and this page must be updated to include it. Verify access, posted land and regulations before you fish.
+      </div></details>
+    </div>
+  </aside>
+  <div id="map"></div>
+</div>
+<div id="banner"></div>
+
+<script>
+(function(){
+  var srcs=[['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js','https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'],
+            ['https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js','https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'],
+            ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css']];
+  function fail(){var s=document.getElementById('status');if(s)s.textContent='';var b=document.getElementById('banner');b.style.display='block';
+    b.textContent='The map library could not be downloaded from any of three sources (cdnjs, jsDelivr, unpkg). Check your internet connection, VPN or ad blocker, then reload.'}
+  function start(){var m=document.createElement('script');m.textContent=document.getElementById('main').textContent;document.body.appendChild(m)}
+  function tryN(i){
+    if(i>=srcs.length)return fail();
+    var l=document.createElement('link');l.rel='stylesheet';l.href=srcs[i][1];document.head.appendChild(l);
+    var s=document.createElement('script');s.src=srcs[i][0];
+    s.onload=function(){window.L?start():tryN(i+1)};s.onerror=function(){l.remove();tryN(i+1)};
+    document.head.appendChild(s)}
+  tryN(0)})();
+</script>
+<script id="main" type="text/plain">
+const $=id=>document.getElementById(id);
+const norm=s=>String(s||'').toUpperCase().replace(/\./g,' ').split(/\s+/).filter(Boolean).join(' ');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f1=v=>(+v).toFixed(1);
+const tick=()=>new Promise(r=>setTimeout(r,0));
+const NE=['Bradford','Carbon','Columbia','Lackawanna','Luzerne','Monroe','Pike','Schuylkill','Sullivan','Susquehanna','Wayne','Wyoming'];
+const NEAR=['Lehigh','Northampton','Northumberland','Montour'];
+const ALLC=NE.concat(NEAR);
+let DIR=[],byId=new Map(),BYSID=new Map();
+
+/* ---------- map ---------- */
+const map=L.map('map',{zoomControl:false,center:[41.2,-75.7],zoom:9,maxZoom:18});
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({imperial:true,metric:false,position:'bottomright'}).addTo(map);
+['public','casing','ghost','dim','lines','sel','top'].forEach((n,i)=>{map.createPane(n).style.zIndex=340+i*10});
+const BASE={
+  topo:L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:16,maxZoom:18,attribution:'USGS The National Map'}),
+  imagery:L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:16,maxZoom:18,attribution:'USGS The National Map'}),
+  osm:L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap contributors &copy; CARTO'})};
+let baseLayer=BASE.topo.addTo(map);
+$('basemap').addEventListener('change',e=>{map.removeLayer(baseLayer);baseLayer=BASE[e.target.value].addTo(map);baseLayer.bringToBack()});
+const Locate=L.Control.extend({options:{position:'topright'},onAdd(){const b=L.DomUtil.create('div','leaflet-control-locate');b.title='Show my location';b.textContent='◎';
+  L.DomEvent.on(b,'click',e=>{L.DomEvent.stop(e);map.locate({enableHighAccuracy:true,setView:false,maximumAge:30000})});return b}});
+map.addControl(new Locate());
+let me=null;
+map.on('locationfound',e=>{if(me)me.remove();me=L.layerGroup([L.circle(e.latlng,{radius:e.accuracy,pane:'top',color:'#38c6d9',weight:1,fillOpacity:.1}),L.circleMarker(e.latlng,{pane:'top',radius:7,color:'#fff',weight:2,fillColor:'#1e90ff',fillOpacity:1})]).addTo(map);map.flyTo(e.latlng,Math.max(map.getZoom(),13))});
+map.on('locationerror',e=>banner('Could not get your location: '+e.message+'. Browsers often block location for local files.'));
+window.addEventListener('error',e=>{try{banner('Script error: '+e.message)}catch(_){}});
+function banner(t){const b=$('banner');b.textContent=t;b.style.display='block';clearTimeout(banner.t);if(!/error|failed|did not/i.test(t))banner.t=setTimeout(()=>b.style.display='none',9000)}
+
+/* ---------- data access ---------- */
+const SV='https://fbweb.pa.gov/arcgis/rest/services/PFBC_Map_Services';
+const URLS={wild:SV+'/Trout_NaturalReproduction/MapServer/0',stocked:SV+'/PFBC_Stocked_Trout_Waters/MapServer/3',special:SV+'/Special_Regulations/MapServer/2',
+  county:SV+'/Counties/MapServer/0',pfbcp:SV+'/PFBC_Properties/MapServer/1',sp26:SV+'/TroutStockedSections_2026/MapServer/0',sp25:SV+'/TroutStocked2025/MapServer/2',
+  classa:'https://conservationexplorer.dcnr.pa.gov/arcgis/rest/services/PA_Public/ClassAStreams/MapServer/0',
+  cons:'https://conservationexplorer.dcnr.pa.gov/arcgis/rest/services/PA_Public/PA_Conserved_Lands/MapServer/0',
+  pub:'https://maps.dcnr.pa.gov/agsprod/rest/services/BOF/StateForests/MapServer/0'};
+const FEAT={sp26:[],sp25:[],wild:[],stocked:[],special:[],classa:[],pub:[],county:[],cons:[],pfbcp:[],wildP:[],stockedP:[]};
+const SEEN={};const LOADED=new Set();const BOX={};
+let HASLAND=false;const ACCESS={};
+
+function jsonp(url){return new Promise((res,rej)=>{
+  const cb='cb'+Math.random().toString(36).slice(2),s=document.createElement('script');
+  const done=()=>{clearTimeout(tm);delete window[cb];s.remove()};
+  const tm=setTimeout(()=>{done();rej(new Error('timed out'))},60000);
+  window[cb]=d=>{done();res(d)};s.onerror=()=>{done();rej(new Error('request blocked'))};
+  s.src=url+'&callback='+cb;document.head.appendChild(s)})}
+function esri2gj(f){
+  if(!f.geometry)return {type:'Feature',properties:f.attributes||{},geometry:null};const g=f.geometry;let geom=null;
+  if(g&&g.paths)geom=g.paths.length===1?{type:'LineString',coordinates:g.paths[0]}:{type:'MultiLineString',coordinates:g.paths};
+  else if(g&&g.rings)geom={type:'Polygon',coordinates:g.rings};
+  return {type:'Feature',properties:f.attributes||{},geometry:geom}}
+async function q1(url,params){
+  const base=Object.assign({outFields:'*',returnGeometry:'true',outSR:'4326'},params);
+  let feats,more=false;
+  try{
+    const p=new URLSearchParams(Object.assign({f:'geojson'},base));
+    const r=await fetch(url+'/query?'+p);if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();if(j.error)throw new Error(j.error.message);
+    feats=j.features||[];more=!!(j.exceededTransferLimit||(j.properties&&j.properties.exceededTransferLimit))
+  }catch(e1){
+    const p=new URLSearchParams(Object.assign({f:'json'},base));
+    const j=await jsonp(url+'/query?'+p);if(j.error)throw new Error(j.error.message||'server error');
+    feats=(j.features||[]).map(esri2gj).filter(f=>f.geometry||params.returnGeometry==='false');more=!!j.exceededTransferLimit}
+  return {feats,more}}
+async function q(url,params){            // pages through large results
+  let off=0,all=[];
+  for(let i=0;i<30;i++){
+    const r=await q1(url,Object.assign({},params,{resultOffset:off,resultRecordCount:1000}));
+    all=all.concat(r.feats);if(!r.more||!r.feats.length)break;off+=r.feats.length}
+  return all}
+const fid=(k,f)=>{const p=f.properties||{};const o=p.OBJECTID!=null?p.OBJECTID:p.FID!=null?p.FID:null;
+  if(o!=null)return k+o;const c=f.geometry&&JSON.stringify(f.geometry.coordinates).slice(0,60);return k+(p.WtrName||p.GNIS_Name||p.Name||'')+c};
+function addNew(k,feats){const s=SEEN[k]||(SEEN[k]=new Set());let n=0;
+  feats.forEach(f=>{const id=fid(k,f);if(s.has(id))return;s.add(id);FEAT[k].push(f);n++});return n}
+function bounds(g){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  (function w(c){if(typeof c[0]==='number'){if(c[0]<x0)x0=c[0];if(c[0]>x1)x1=c[0];if(c[1]<y0)y0=c[1];if(c[1]>y1)y1=c[1]}else c.forEach(w)})(g.coordinates);return [x0,y0,x1,y1]}
+
+async function loadCounty(name,fails){
+  const U=name.toUpperCase(),cw="UPPER(County) LIKE '%"+U+"%'",off=.0001;
+  // county outline first: gives the box used to fetch land layers
+  let poly=[];try{poly=await q(URLS.county,{where:"UPPER(COUNTY_NAM)='"+U+"'",maxAllowableOffset:.0003})}catch(e){fails.push(name+' outline ('+e.message+')')}
+  addNew('county',poly);
+  let b=[-76.2,40.5,-74.6,42.1];if(poly.length){b=bounds(poly[0].geometry);b=[b[0]-.04,b[1]-.04,b[2]+.04,b[3]+.04]}BOX[name]=b;
+  const env={geometry:b.join(','),geometryType:'esriGeometryEnvelope',inSR:4326,spatialRel:'esriSpatialRelIntersects'};
+  const jobs=[
+    ['wild',URLS.wild,{where:cw,maxAllowableOffset:off}],
+    ['stocked',URLS.stocked,{where:cw,maxAllowableOffset:off}],
+    ['special',URLS.special,{where:"UPPER(CountyString) LIKE '%"+U+"%'",maxAllowableOffset:off}],
+    ['classa',URLS.classa,Object.assign({where:'1=1',maxAllowableOffset:off},env)],
+    ['sp26',URLS.sp26,{where:cw,returnGeometry:'false',outFields:'OBJECTID,GIS_Key,WtrName,County,StockingYear,TotalBrookStocked,TotalBrownStocked,TotalRainbowStocked,TotalGoldenStocked'}],
+    ['sp25',URLS.sp25,{where:cw,returnGeometry:'false',outFields:'OBJECTID,GIS_Key,WtrName,County,StockingYear,TotalBrookStocked,TotalBrownStocked,TotalRainbowStocked,TotalGoldenStocked'}],
+    ['pfbcp',URLS.pfbcp,{where:cw,maxAllowableOffset:.0002,outFields:'OBJECTID,PropertyName,Owner,LandRights,PrimaryWaterName,PrimaryUse,Acres'}],
+    ['cons',URLS.cons,Object.assign({where:"Access<>'Closed' AND Acres>=2",maxAllowableOffset:.0002,outFields:'OBJECTID,Name,Holder,Acres,Access,Type,Descriptio'},env)],
+    ['pub',URLS.pub,Object.assign({where:'1=1',maxAllowableOffset:.0003,outFields:'OBJECTID,SubType,SF_Name,StParkName,SGL_No,LandManager,Acreage'},env)]];
+  await Promise.all(jobs.map(async([k,u,p])=>{try{addNew(k,await q(u,p))}catch(e){fails.push(name+' '+k+' ('+e.message+')')}}));
+  LOADED.add(name)}
+
+const SCHED={snap:'2026-11-20',season:2026,places:["Canton Fireman's Social Hall, 940 Springbrook Dr, Canton PA 17724", "Canton Fireman's Social Hall 940 Springbrook Dr., Canton PA 17724", "Alparon Park-RT14 North of Troy", "255 Millstreet, Canton PA 17724", "Wysox-RT187 & RT6", "Intersection SR 187 & Wyalusing- New Albany Road", "Wheelerville-SR154", "Boat Launch At Cooks Pond", "Hickory Run State Park Office", "Gouldsboro Truck Stop-RT507 North of I-380", "Army Corps of Engineers Office-Beltzvile State Park", "Andreas P.O.-SR895", "Dollar General 700 Barnesville Drive, Barnesville, PA", "Kunkletown P.O.-off SR209", "Exit 273-White Haven-int. of I80 & SR940", "Two Kings Pizza, parking lot, 1474 Blakeslee Blvd, Lehighton PA 18235", "Aquashicola P.O.", "Dirt pull off int. Stock St.-Rt 54 & Park Ave.-Nesquehoning", "Tuscarora State Park Boat Launch (40.80664 - 76.01553)", "Int. of I-80 & RT309", "Aquashicola Post Office", "Mauch Chunk Lk park office", "parking lot across from Abraczinskas Nursery-SR42", "I-80 Exit 242-RT339", "across from VFW on SR42 at Buckhorn", "Parking lot across from Abraczinskas Nursery-SR42", "Park & Ride parking lot at Int. of SR254 & 487", "Briar Creek Lk", "Int. of I-80 & SR487-Denny's Restaurant", "Harveys Lake", "Int. of SR118 & SR487 at Red Rock General Store", "Delaware-Hudson Rails to Trails Trailhead", "PFBC access area at Lake Winola", "Elmhurst-junction of SR435 & SR590", "new Exit 201 of I-81", "Christy Mathewson Field, 2036 College Rd.,PA 18419", "Merli Sarnoski Lake", "Twin Rocks-RT191 North of I84", "", "PFBC Harris Pond parking lot-Main Road-Sweet Valley", "Lake Francis parking lot", "Snydersville Exit off RT33 Sunoco on left", "Snydersville Exit off RT33 Sunoco on  left", "parking lot-Int. of RT402 & RT2003-Bushkill Road", "Pinebrook Park North-Int Hallet Rd & N. 5th Street", "Tobyhanna Lake", "Ressica Falls Boy Scout Reservation off SR402", "Int. of RT209 & Bushkill Rd", "Pinebrook Park North-Int. Hallet Rd & N. 5th Street", "Glen Park, 149 Collins Street, Stroudsburg", "Shohola Lake parking lot", "Dollar General in Hawley", "Parking Lot-Int. of RT402 & RT2003-Bushkill Rd", "Lily Pond", "State Gamelands No. 316 parking lot on SR114", "Summit Station Fire House-RT895", "Johnson & Bailey Bridge-Wisconisco Ave-Millersburg", "Locust Lake Boat Ramp (40.78452 - 76.12105)", "Klingertown Fire Company Carnival Grounds", "Entrance to Pillow Campground and Resort 307 Market St, Pillow, PA 17080", "Summit Station Fire House RT 895", "Whipoorwill Dam (40.78280 - 76.21005)", "Marchianos Parking Lot, 2 S. Railroad St., New Ringgold, PA", "Tri Valley Community Pool 306 S Good Spring Rd.,Hegins PA 17938", "Friedensburg Fish & Game Parking Lot", "Tri Valley Community Pool 306 S Good Spring Rd., Hegins, PA 17938", "Ned Smith Center 176 Water Company Rd. Millersburg, PA 17061", "Int. of SR81 & SR54", "Forkston Corner-RT87", "Endless Mountain Market 1205 US 220 Muncy Valley", "Forksville-SR154 & SR87", "DCNR Ranger Station-Loyalsock State Forest-SR87-3 Mi. N of Sull/Lyc Co. line", "Veteran's Inn 1324 Elk Grove Rd, Benton PA 17814", "Hunters Lk-SR42", "Across Country Real Estate-Montrose", "Lanesboro Community Building", "PFBC Oxbow Lake access area", "Exit 206-I81", "Meshoppen Pizza SR-6", "Trail Diner-RT11 North of New Milford", "Large pull off at Int. RT706 & SR3029 Fairdale", "Pump & Pantry RT11-Nicholson", "Meshoppen Pizza-SR6", "Prompton Dam off RT170", "Hays Market, RT 6, Waymart", "Hays Market, RT6, Waymart", "Upper Woods Pond-SR371", "PFBC Duck Harbor Access", "PFBC Long Pond Access", "Fairview Lake", "Prompton Dam-SR170", "Wyoming County Seneca Park", "Hummel's Restaurant-Lenhartsville-SR143", "Railroad Depot-Bath RT512", "Queen City Coop Trout Nursery off SR29 in Allentown Parkway", "Upper Macungie Park 1/2 Mi. North of RT78 on RT100", "Zion Lehigh Lutheran Church, Rt 39023, 8269 Spring CK RD", "Home Depot Rt145 So. Exit, off Rt22", "Zion Lehigh Lutheran Church, Rt 39023, 8269 CK RD", "at the lake", "Saucon Park-RT78 Bethlehem Exit", "Upper Macungie Park 1/2 mi. N of RT78 on RT 100", "Stockertown P.O.-SR33 & SR191", "Lapowinzo Rod & Gun Club-SR4003-1 Mi. North of Northampton", "Nazareth Park North Broad Street Ext.", "K-Mart parking lot-RT145 at Walnutport", "Zebre Township Rod & Gun Club at Trevorton", "PFBC Sunbury Access RT 147 Sunbury", "Red Cross Int. of Scwaben Ck Rd & RT225", "McDonald's on Rt 54 in Danville"],notes:["PLACE CHANGE", "Rescheduled From Feb 23 2026", "TIME CHANGE", "CANCELLED", "Rescheduled From Mar 30 2026", "Rescheduled From Apr 24 2026", "Rescheduled From Feb 17 2026", "Rescheduled From Mar 27 2026", "Rescheduled From Dec 31 2025", "Rescheduled From Apr 29 2026", "Rescheduled From Feb 19 2026", "Rescheduled From Feb 18 2026", "Rescheduled From Apr 17 2026", "Rescheduled From Apr 23 2026", "Rescheduled From Feb 20 2026"],hat:["Tylersville", "Benner Spring", "Bellefonte", "Oswayo"],lines:`Towanda Creek~3~Bradford~260427~14~1~0~1115~0~I~
+South Branch Towanda Creek~2~Bradford~260302~14~0~1~1115~0~P~
+Towanda Creek~2~Bradford~260302~12~0~1~1115~0~P~
+Towanda Creek~3~Bradford~260302~12~0~1~1115~0~P~
+North Branch Sugar Creek~2~Bradford~260311~12~0~2~1130~0~P~
+Sugar Creek~2~Bradford~260311~14~0~2~1130~0~P~
+Little Schrader Creek~2~Bradford~260313~2~0~3~1145~0~P~
+Schrader Creek~3~Bradford~260313~2~0~3~1145~0~P~
+Tuscarora Creek~2~Bradford~260325~14~0~4~1230~0~P~
+Wysox Creek~2~Bradford~260325~12~0~4~1230~0~P~
+Sugar Run~2~Bradford~260406~4~0~5~1200~0~I~0
+Schrader Creek~2~Bradford~260410~2~0~6~1115~0~I~
+North Branch Sugar Creek~2~Bradford~260416~6~0~2~1200~0~I~
+South Creek~3~Bradford~260416~4~0~2~1200~0~I~
+Sugar Creek~2~Bradford~260416~14~0~2~1200~0~I~
+Tuscarora Creek~2~Bradford~260421~14~0~4~1200~0~I~
+Wysox Creek~2~Bradford~260421~14~0~4~1200~0~I~
+Gaylord Creek~2~Bradford~260427~6~0~7~1230~0~I~
+Towanda Creek~2~Bradford~260429~14~0~0~1115~0~I~
+Schrader Creek~3~Bradford~260501~2~0~3~1115~0~I~
+Sand Spring Run~2~Carbon~260511~6~1~8~1130~1~I~
+Sand Spring Run~2~Carbon~260413~6~1~9~1200~1~I~
+Pohopoco Creek~4~Carbon~260219~4~0~10~1230~1~P~
+Lizard Creek~4~Carbon~260226~14~0~11~1200~1~P~
+Lizard Creek~2~Carbon~260227~12~0~12~1145~2~P~1
+Mahoning Creek~2~Carbon~260227~12~0~12~1145~2~P~1
+Buckwha Creek~3~Carbon~260303~14~0~13~1230~1~P~
+Buckwha Creek~4~Carbon~260303~14~0~13~1230~1~P~
+Lehigh River~6~Carbon~260303~15~0~14~1115~1~P~
+Mahoning Creek~3~Carbon~260304~14~0~15~1200~1~P~1
+Aquashicola Creek~5~Carbon~260305~11~0~16~1215~1~P~
+Drakes Creek~2~Carbon~260325~6~0~17~1200~1~P~
+Lehigh Canal~2~Carbon~260325~4~0~17~1200~1~P~
+Lehigh River~8~Carbon~260325~6~0~17~1200~1~P~
+Mauch Chunk Creek~2~Carbon~260325~4~0~17~1200~1~P~
+Nesquehoning Creek~4~Carbon~260325~14~0~17~1200~1~P~
+Hickory Run~3~Carbon~260330~1~0~8~1130~1~P~
+Mud Run~2~Carbon~260330~6~0~8~1130~1~P~
+Sand Spring Run~2~Carbon~260330~2~0~8~1130~1~P~
+Aquashicola Creek~5~Carbon~260406~14~0~16~1215~1~I~
+Buckwha Creek~3~Carbon~260406~6~0~16~1215~1~I~
+Lizard Creek~4~Carbon~260407~14~0~11~1200~1~I~
+Lizard Creek~2~Carbon~260409~14~0~18~1145~2~I~
+Lehigh Canal~2~Carbon~260414~4~0~17~1230~1~I~
+Mauch Chunk Creek~2~Carbon~260414~4~0~17~1230~1~I~
+Nesquehoning Creek~4~Carbon~260414~14~0~17~1230~1~I~
+Lehigh River~6~Carbon~260416~14~0~19~1115~1~I~
+Mahoning Creek~3~Carbon~260417~14~0~15~1215~1~I~
+Aquashicola Creek~5~Carbon~260427~14~0~20~1215~1~I~
+Buckwha Creek~4~Carbon~260427~6~0~20~1215~1~I~
+Lehigh River~6~Carbon~260501~6~0~19~1215~1~I~
+Lehigh Canal~2~Carbon~260506~4~0~21~1115~1~I~
+Mahoning Creek~3~Carbon~260506~14~0~21~1115~1~I~0
+Mauch Chunk Creek~2~Carbon~260506~4~0~21~1115~1~I~
+Hickory Run~3~Carbon~260511~1~0~8~1130~1~I~
+Mahoning Creek~2~Carbon~260513~14~0~12~1145~2~I~
+Roaring Creek~2~Columbia~260504~14~1~22~1045~1~I~2
+Roaring Creek~3~Columbia~260504~14~1~22~1045~1~I~2
+Beaver Run~2~Columbia~260224~4~0~23~1100~1~P~
+Scotch Run~2~Columbia~260224~2~0~23~1100~1~P~
+Little Fishing Creek~2~Columbia~260226~14~0~24~1045~1~P~
+Mugser Run~2~Columbia~260311~4~0~25~1145~1~P~
+Roaring Creek~2~Columbia~260311~12~0~25~1145~1~P~
+Roaring Creek~3~Columbia~260311~12~0~25~1145~1~P~
+South Branch Roaring Creek~6~Columbia~260311~14~0~25~1145~1~P~
+Fishing Creek~3~Columbia~260319~11~0~26~1045~1~P~
+Fishing Creek~5~Columbia~260319~14~0~26~1045~1~P~
+West Creek~2~Columbia~260319~12~0~26~1045~1~P~
+Briar Creek~2~Columbia~260324~14~0~27~1200~3~P~3
+West Branch Briar Creek~2~Columbia~260324~4~0~27~1200~3~P~3
+Fishing Creek~7~Columbia~260327~14~0~28~1045~1~P~
+Fishing Creek~9~Columbia~260327~14~0~28~1045~1~P~
+Huntington Creek~6~Columbia~260327~14~0~28~1045~1~P~
+Pine Creek~2~Columbia~260330~14~0~29~1130~1~P~4
+Fishing Creek~3~Columbia~260424~11~0~26~1045~1~I~
+Fishing Creek~5~Columbia~260424~14~0~26~1045~1~I~
+Huntington Creek~6~Columbia~260427~14~0~24~1045~1~I~5
+Little Fishing Creek~2~Columbia~260427~14~0~24~1045~1~I~5
+Pine Creek~2~Columbia~260504~14~0~30~1045~1~I~
+Mugser Run~2~Columbia~260506~4~0~25~1145~1~I~
+South Branch Roaring Creek~6~Columbia~260506~14~0~25~1145~1~I~
+Lackawanna River~1~Lackawanna~260305~12~0~31~1230~1~P~6
+Gardner Creek~2~Lackawanna~260307~6~0~32~1230~0~P~
+Roaring Brook~3~Lackawanna~260310~12~0~33~1230~1~P~3
+Roaring Brook~5~Lackawanna~260310~12~0~33~1230~1~P~
+South Branch Tunkhannock Creek~2~Lackawanna~260318~14~0~34~1245~1~P~
+South Branch Tunkhannock Creek~3~Lackawanna~260318~14~0~34~1245~1~P~
+Lehigh River~4~Lackawanna~260319~11~0~9~1230~1~P~
+South Branch Tunkhannock Creek~4~Lackawanna~260319~14~0~35~0130~0~P~
+Lehigh River~3~Lackawanna~260326~10~0~9~1200~1~P~
+West Branch Wallenpaupack Creek~2~Lackawanna~260326~14~0~9~1200~1~P~
+Roaring Brook~5~Lackawanna~260408~14~0~36~1245~1~I~
+Gardner Creek~2~Lackawanna~260411~6~0~32~1230~0~I~
+Lehigh River~3~Lackawanna~260417~14~0~9~1200~1~I~
+Lehigh River~4~Lackawanna~260417~14~0~9~1200~1~I~
+South Branch Tunkhannock Creek~2~Lackawanna~260420~14~0~34~1245~1~I~
+South Branch Tunkhannock Creek~3~Lackawanna~260420~14~0~34~1245~1~I~
+West Branch Wallenpaupack Creek~2~Lackawanna~260422~14~0~37~1215~1~I~
+Lackawanna River~1~Lackawanna~260428~14~0~31~1230~1~I~
+Lehigh River~3~Lackawanna~260428~14~0~9~1200~1~I~
+South Branch Tunkhannock Creek~4~Lackawanna~260428~14~0~35~0115~0~I~
+Roaring Brook~3~Lackawanna~260511~14~0~38~1230~1~I~3
+Roaring Brook~5~Lackawanna~260511~14~0~33~1230~1~I~0
+Roaring Brook~5~Lackawanna~261005~4~0~36~1230~1~F~0
+South Branch Tunkhannock Creek~4~Lackawanna~261005~6~0~35~1230~0~F~0
+Harveys Creek~2~Luzerne~260413~14~1~39~1230~1~I~
+Lehigh River~6~Luzerne~260303~15~0~14~1115~1~P~
+Big Wapwallopen Creek~2~Luzerne~260309~12~0~19~1115~1~P~
+Harveys Creek~2~Luzerne~260310~12~0~39~1100~1~P~
+Harveys Creek~4~Luzerne~260310~14~0~39~1100~1~P~
+Harveys Creek~5~Luzerne~260310~14~0~39~1100~1~P~
+Nescopeck Creek~2~Luzerne~260318~2~0~40~1100~1~P~
+Nescopeck Creek~3~Luzerne~260318~3~0~40~1100~1~P~
+Nescopeck Creek~5~Luzerne~260318~3~0~40~1100~1~P~
+Lehigh River~4~Luzerne~260319~11~0~9~1230~1~P~
+Kitchen Creek~2~Luzerne~260330~6~0~29~1130~1~P~4
+Pine Creek~2~Luzerne~260330~14~0~29~1130~1~P~4
+Nescopeck Creek~2~Luzerne~260415~2~0~40~1115~1~I~
+Nescopeck Creek~3~Luzerne~260415~3~0~40~1115~1~I~
+Nescopeck Creek~5~Luzerne~260415~14~0~40~1115~1~I~
+Big Wapwallopen Creek~2~Luzerne~260416~14~0~19~1115~1~I~
+Harveys Creek~4~Luzerne~260416~14~0~39~1230~1~I~
+Harveys Creek~5~Luzerne~260416~14~0~39~1230~1~I~
+Lehigh River~6~Luzerne~260416~14~0~19~1115~1~I~
+Lehigh River~4~Luzerne~260417~14~0~9~1200~1~I~
+Nescopeck Creek~3~Luzerne~260428~3~0~40~1115~1~I~
+Big Wapwallopen Creek~2~Luzerne~260501~14~0~19~1215~1~I~
+Lehigh River~6~Luzerne~260501~6~0~19~1215~1~I~
+Harveys Creek~2~Luzerne~260504~14~0~30~1045~1~I~
+Harveys Creek~5~Luzerne~260504~14~0~30~1045~1~I~
+Pine Creek~2~Luzerne~260504~14~0~30~1045~1~I~
+Harveys Creek~4~Luzerne~261006~4~0~29~1130~1~F~
+Harveys Creek~5~Luzerne~261006~4~0~29~1130~1~F~
+Mcmichael Creek~5~Monroe~260302~14~0~41~1200~1~P~
+Mcmichael Creek~6~Monroe~260302~14~0~41~1200~1~P~
+Buckwha Creek~3~Monroe~260303~14~0~13~1230~1~P~
+Princess Run~3~Monroe~260303~13~0~13~1230~1~P~
+Mcmichael Creek~3~Monroe~260306~14~0~42~1200~1~P~
+Pocono Creek~6~Monroe~260306~4~0~41~1200~1~P~
+Bush Kill~5~Monroe~260318~13~0~43~1230~2~P~6
+Lehigh River~4~Monroe~260319~11~0~9~1230~1~P~
+Brodhead Creek~2~Monroe~260323~14~0~44~1200~1~P~7
+Brodhead Creek~2~Monroe~260323~14~0~44~1200~1~P~7
+Tobyhanna Creek~3~Monroe~260325~3~0~45~1145~1~P~8
+Tobyhanna Creek~4~Monroe~260325~3~0~45~1145~1~P~8
+Bush Kill~4~Monroe~260326~2~0~46~1230~2~P~
+Lehigh River~3~Monroe~260326~10~0~9~1200~1~P~
+Bush Kill~6~Monroe~260331~15~0~47~1230~2~P~
+Brodhead Creek~3~Monroe~260403~14~0~48~1200~1~P~
+Brodhead Creek~4~Monroe~260403~14~0~48~1200~1~P~
+Buckwha Creek~3~Monroe~260406~6~0~16~1215~1~I~
+Princess Run~3~Monroe~260406~14~0~16~1215~1~I~
+Mcmichael Creek~3~Monroe~260410~14~0~41~1215~1~I~
+Mcmichael Creek~6~Monroe~260410~14~0~41~1215~1~I~
+Bush Kill~6~Monroe~260413~14~0~47~1230~2~I~
+Brodhead Creek~2~Monroe~260414~14~0~48~1200~1~I~
+Brodhead Creek~2~Monroe~260414~14~0~48~1200~1~I~
+Brodhead Creek~3~Monroe~260414~14~0~48~1200~1~I~
+Lehigh River~3~Monroe~260417~14~0~9~1200~1~I~
+Lehigh River~4~Monroe~260417~14~0~9~1200~1~I~
+Brodhead Creek~4~Monroe~260420~14~0~49~1215~1~I~
+Bush Kill~4~Monroe~260424~2~0~43~1230~2~I~
+Bush Kill~5~Monroe~260424~14~0~43~1230~2~I~
+Bush Kill~6~Monroe~260428~14~0~47~1230~2~I~9
+Lehigh River~3~Monroe~260428~14~0~9~1200~1~I~
+Tobyhanna Creek~3~Monroe~260428~7~0~9~1200~1~I~
+Tobyhanna Creek~4~Monroe~260428~3~0~9~1200~1~I~
+Brodhead Creek~2~Monroe~260429~14~0~44~1215~1~I~
+Brodhead Creek~2~Monroe~260429~14~0~44~1215~1~I~
+Brodhead Creek~3~Monroe~260429~6~0~44~1215~1~I~
+Brodhead Creek~4~Monroe~260429~14~0~44~1215~1~I~
+Mcmichael Creek~5~Monroe~260507~14~0~41~1130~1~I~
+Mcmichael Creek~6~Monroe~260507~14~0~41~1130~1~I~
+Bush Kill~6~Monroe~261005~4~0~47~1230~2~F~
+Brodhead Creek~3~Monroe~261007~4~0~48~1200~1~F~
+Shohola Creek~3~Pike~260420~3~1~50~0100~0~I~
+Masthope Creek~2~Pike~260314~14~0~50~1245~0~P~
+Shohola Creek~3~Pike~260314~3~0~50~1245~0~P~
+Shohola Creek~4~Pike~260314~3~0~50~1245~0~P~
+Little Bush Kill~6~Pike~260316~2~0~47~1230~2~P~
+Little Bush Kill~8~Pike~260316~2~0~47~1230~2~P~
+Bush Kill~2~Pike~260317~11~0~43~1230~2~P~
+Middle Branch Bush Kill~2~Pike~260317~1~0~43~1230~2~P~
+Bush Kill~5~Pike~260318~13~0~43~1230~2~P~6
+Lackawaxen River~4~Pike~260319~14~0~51~0100~0~P~
+Lackawaxen River~5~Pike~260319~14~0~51~0100~0~P~
+Saw Creek~3~Pike~260320~6~0~52~1230~2~P~
+Lackawaxen River~3~Pike~260330~14~0~53~0100~0~P~
+Bush Kill~6~Pike~260331~15~0~47~1230~2~P~
+Lackawaxen River~3~Pike~260409~14~0~51~0100~0~I~
+Lackawaxen River~4~Pike~260409~14~0~51~0100~0~I~
+Lackawaxen River~5~Pike~260409~14~0~51~0100~0~I~
+Bush Kill~6~Pike~260413~14~0~47~1230~2~I~
+Little Bush Kill~6~Pike~260413~2~0~47~1230~2~I~
+Little Bush Kill~8~Pike~260413~2~0~47~1230~2~I~
+Decker Brook~3~Pike~260415~6~0~54~1245~0~I~
+Masthope Creek~2~Pike~260415~14~0~54~1245~0~I~
+Shohola Creek~4~Pike~260422~3~0~50~0100~0~I~
+Bush Kill~2~Pike~260424~14~0~43~1230~2~I~
+Bush Kill~5~Pike~260424~14~0~43~1230~2~I~
+Saw Creek~3~Pike~260424~6~0~43~1230~2~I~
+Lackawaxen River~3~Pike~260427~14~0~51~0100~0~I~
+Lackawaxen River~4~Pike~260427~14~0~51~0100~0~I~
+Lackawaxen River~5~Pike~260427~14~0~51~0100~0~I~
+Bush Kill~6~Pike~260428~14~0~47~1230~2~I~9
+Little Bush Kill~6~Pike~260428~2~0~47~1230~2~I~9
+Little Bush Kill~8~Pike~260428~2~0~47~1230~2~I~9
+Masthope Creek~2~Pike~260505~14~0~54~1245~0~I~
+Bush Kill~6~Pike~261005~4~0~47~1230~2~F~
+Lackawaxen River~4~Pike~261007~4~0~51~0100~0~F~
+Bear Creek~2~Schuylkill~260226~4~0~55~1200~0~P~
+Bear Creek~3~Schuylkill~260226~4~0~55~1200~0~P~
+Pine Creek, Trib To Mahantango Creek~4~Schuylkill~260226~2~0~56~1115~2~P~
+Lizard Creek~2~Schuylkill~260227~12~0~12~1145~2~P~1
+Mahoning Creek~2~Schuylkill~260227~12~0~12~1145~2~P~1
+Pine Creek, Trib To Little Schuylkill River~2~Schuylkill~260227~4~0~12~1145~2~P~1
+Locust Creek~2~Schuylkill~260302~14~0~57~1145~2~P~
+Locust Creek~3~Schuylkill~260302~14~0~57~1145~2~P~
+Mahantango Creek~2~Schuylkill~260303~14~0~58~1130~0~P~10
+Mahantango Creek~3~Schuylkill~260305~14~0~59~1130~0~P~1
+Lower Little Swatara Creek~2~Schuylkill~260311~14~0~60~1200~0~P~0
+Little Schuylkill River~3~Schuylkill~260317~14~0~18~1145~2~P~
+Little Catawissa Creek~2~Schuylkill~260318~3~0~61~1145~2~P~
+Little Mahanoy Creek~2~Schuylkill~260318~14~0~61~1145~2~P~
+Little Schuylkill River~6~Schuylkill~260319~4~0~62~1145~2~P~11
+Pine Creek, Trib To Schuylkill River~3~Schuylkill~260319~2~0~62~1145~2~P~11
+Deep Creek~3~Schuylkill~260324~14~0~63~1200~0~P~
+Deep Creek~4~Schuylkill~260324~14~0~63~1200~0~P~
+Upper Little Swatara Creek~2~Schuylkill~260326~14~0~64~1200~0~P~0
+Pine Creek, Trib To Mahantango Creek~2~Schuylkill~260327~14~0~63~1145~0~P~
+Pine Creek, Trib To Mahantango Creek~3~Schuylkill~260327~14~0~63~1145~0~P~
+Pine Creek, Trib To Mahantango Creek~2~Schuylkill~260406~14~0~65~1200~0~I~
+Pine Creek, Trib To Mahantango Creek~3~Schuylkill~260406~14~0~65~1200~0~I~
+Deep Creek~3~Schuylkill~260407~14~0~63~1200~0~I~
+Deep Creek~4~Schuylkill~260407~14~0~63~1200~0~I~
+Little Schuylkill River~3~Schuylkill~260409~14~0~18~1145~2~I~
+Little Schuylkill River~8~Schuylkill~260409~4~0~18~1145~2~I~
+Lizard Creek~2~Schuylkill~260409~14~0~18~1145~2~I~
+Mahantango Creek~3~Schuylkill~260410~14~0~59~1130~0~I~
+Mahantango Creek~2~Schuylkill~260413~14~0~58~1130~0~I~
+Upper Little Swatara Creek~2~Schuylkill~260416~6~0~64~1200~0~I~
+Locust Creek~2~Schuylkill~260420~6~0~57~1145~2~I~
+Locust Creek~3~Schuylkill~260420~6~0~57~1145~2~I~
+Pine Creek, Trib To Mahantango Creek~4~Schuylkill~260423~2~0~66~1115~2~I~0
+Little Catawissa Creek~2~Schuylkill~260429~3~0~61~1145~2~I~12
+Little Mahanoy Creek~2~Schuylkill~260429~14~0~61~1145~2~I~12
+Bear Creek~2~Schuylkill~260507~6~0~55~1200~0~I~
+Bear Creek~3~Schuylkill~260507~4~0~55~1200~0~I~
+Lower Little Swatara Creek~2~Schuylkill~260507~14~0~55~1200~0~I~
+Little Schuylkill River~3~Schuylkill~260511~6~0~67~1145~2~I~
+Little Schuylkill River~6~Schuylkill~260511~2~0~67~1145~2~I~
+Mahoning Creek~2~Schuylkill~260513~14~0~12~1145~2~I~
+Pine Creek, Trib To Little Schuylkill River~2~Schuylkill~260513~6~0~12~1145~2~I~
+North Branch Mehoopany Creek~2~Sullivan~260318~11~0~68~0100~0~P~
+Muncy Creek~2~Sullivan~260320~6~0~69~1100~0~P~
+Muncy Creek~3~Sullivan~260320~14~0~69~1100~0~P~
+Little Loyalsock Creek~2~Sullivan~260330~12~0~70~1130~0~P~
+Elk Creek~3~Sullivan~260401~12~0~71~1115~0~P~
+Hoagland Branch~3~Sullivan~260401~12~0~71~1115~0~P~
+Kings Creek~2~Sullivan~260401~6~0~71~1115~0~P~
+Loyalsock Creek~3~Sullivan~260402~14~0~71~1130~0~P~
+Loyalsock Creek~3~Sullivan~260402~14~0~71~1130~0~P~
+Loyalsock Creek~4~Sullivan~260402~14~0~71~1130~0~P~
+West Branch Fishing Creek~2~Sullivan~260403~2~0~72~1145~0~P~
+Schrader Creek~2~Sullivan~260410~2~0~6~1115~0~I~
+Loyalsock Creek~3~Sullivan~260413~14~0~71~1045~0~I~
+Loyalsock Creek~3~Sullivan~260413~14~0~71~1045~0~I~
+Loyalsock Creek~4~Sullivan~260413~14~0~71~1045~0~I~
+Little Loyalsock Creek~2~Sullivan~260417~14~0~70~1130~0~I~
+Elk Creek~2~Sullivan~260420~14~0~71~1145~0~I~
+Elk Creek~3~Sullivan~260420~6~0~71~1145~0~I~
+Hoagland Branch~3~Sullivan~260420~14~0~71~1145~0~I~
+Mill Creek - hillsgrove~2~Sullivan~260420~6~0~71~1145~0~I~
+Muncy Creek~2~Sullivan~260423~6~0~69~1100~0~I~
+Muncy Creek~3~Sullivan~260423~14~0~69~1100~0~I~
+North Branch Mehoopany Creek~2~Sullivan~260424~14~0~68~1200~0~I~2
+Hoagland Branch~3~Sullivan~260430~6~0~73~1115~0~I~
+West Branch Fishing Creek~2~Sullivan~260504~2~0~72~1115~0~I~
+Loyalsock Creek~3~Sullivan~260505~6~0~71~1045~0~I~
+Loyalsock Creek~3~Sullivan~260505~6~0~71~1045~0~I~
+Loyalsock Creek~4~Sullivan~260505~6~0~71~1045~0~I~
+Martins Creek~3~Susquehanna~260406~14~1~32~1230~0~I~
+Snake Creek~2~Susquehanna~260304~11~0~74~1245~0~P~
+Lackawanna River~1~Susquehanna~260305~12~0~31~1230~1~P~6
+Canawacta Creek~1~Susquehanna~260309~12~0~75~0115~0~P~
+South Branch Canawacta Creek~2~Susquehanna~260309~4~0~75~0115~0~P~
+Starrucca Creek~5~Susquehanna~260309~14~0~75~0115~0~P~
+Martins Creek~3~Susquehanna~260310~12~0~76~1200~0~P~
+Fall Brook~3~Susquehanna~260324~14~0~74~0100~0~P~
+Silver Creek~2~Susquehanna~260324~3~0~74~0100~0~P~
+Silver Creek~3~Susquehanna~260324~3~0~74~0100~0~P~
+Silver Creek~4~Susquehanna~260324~3~0~74~0100~0~P~
+East Branch Tunkhannock Creek~2~Susquehanna~260331~14~0~77~1230~1~P~
+Meshoppen Creek~2~Susquehanna~260331~14~0~78~0100~0~P~
+Salt Lick Creek~2~Susquehanna~260331~12~0~79~1230~0~P~
+Salt Lick Creek~3~Susquehanna~260331~12~0~79~1230~0~P~
+Salt Lick Creek~4~Susquehanna~260331~12~0~79~1230~0~P~
+Tunkhannock Creek~2~Susquehanna~260331~14~0~77~1230~1~P~
+West Branch Meshoppen Creek~2~Susquehanna~260331~14~0~78~0100~0~P~
+East Branch Wyalusing Creek~2~Susquehanna~260402~12~0~80~0130~0~P~
+North Branch Wyalusing Creek~3~Susquehanna~260402~12~0~80~0130~0~P~
+East Branch Wyalusing Creek~2~Susquehanna~260407~14~0~80~0100~0~I~
+North Branch Wyalusing Creek~3~Susquehanna~260407~14~0~80~0100~0~I~
+Horton Creek~2~Susquehanna~260408~4~0~81~0100~0~I~
+Fall Brook~2~Susquehanna~260414~6~0~74~0100~0~I~
+Fall Brook~3~Susquehanna~260414~6~0~74~0100~0~I~
+Silver Creek~2~Susquehanna~260414~6~0~74~0100~0~I~
+Silver Creek~3~Susquehanna~260414~14~0~74~0100~0~I~
+Meshoppen Creek~2~Susquehanna~260415~14~0~82~0100~0~I~
+Riley Creek~2~Susquehanna~260415~4~0~82~0100~0~I~
+West Branch Meshoppen Creek~2~Susquehanna~260415~14~0~82~0100~0~I~
+East Branch Tunkhannock Creek~2~Susquehanna~260427~14~0~77~1245~1~I~
+Gaylord Creek~2~Susquehanna~260427~6~0~7~1230~0~I~
+Tunkhannock Creek~2~Susquehanna~260427~14~0~77~1245~1~I~
+Lackawanna River~1~Susquehanna~260428~14~0~31~1230~1~I~
+Salt Lick Creek~3~Susquehanna~260506~14~0~74~1230~0~I~
+Salt Lick Creek~4~Susquehanna~260506~14~0~74~1230~0~I~
+Silver Creek~3~Susquehanna~260506~12~0~74~1230~0~I~
+Snake Creek~2~Susquehanna~260506~14~0~74~1230~0~I~
+Starrucca Creek~5~Susquehanna~260507~14~0~75~0115~0~I~
+West Branch Lackawaxen River~6~Wayne~260413~14~1~83~0100~1~I~
+Lackawaxen River~1~Wayne~260225~14~0~84~1245~1~P~
+Van Auken Creek~2~Wayne~260225~14~0~85~1245~1~P~
+Lackawanna River~1~Wayne~260305~12~0~31~1230~1~P~6
+West Branch Lackawaxen River~6~Wayne~260305~14~0~83~0100~1~P~
+West Branch Lackawaxen River~7~Wayne~260305~14~0~83~0100~1~P~
+West Branch Wallenpaupack Creek~3~Wayne~260312~14~0~37~1215~1~P~
+West Branch Wallenpaupack Creek~4~Wayne~260312~14~0~37~1215~1~P~
+Dyberry Creek~2~Wayne~260314~14~0~86~1230~1~P~
+Dyberry Creek~3~Wayne~260314~14~0~86~1230~1~P~
+Dyberry Creek~4~Wayne~260314~14~0~86~1230~1~P~
+Rose Pond Branch~2~Wayne~260314~6~0~86~1230~1~P~
+Equinunk Creek~3~Wayne~260323~6~0~87~0100~0~P~
+Jones Creek~2~Wayne~260326~4~0~9~1200~1~P~
+West Branch Wallenpaupack Creek~2~Wayne~260326~14~0~9~1200~1~P~
+Lackawaxen River~3~Wayne~260330~14~0~53~0100~0~P~
+Dyberry Creek~1~Wayne~260401~6~0~88~0100~1~P~
+East Branch Dyberry Creek~2~Wayne~260401~14~0~88~0100~1~P~
+West Branch Dyberry Creek~2~Wayne~260401~14~0~88~0100~1~P~
+Lackawaxen River~3~Wayne~260409~14~0~51~0100~0~I~
+West Branch Wallenpaupack Creek~4~Wayne~260410~14~0~89~1230~1~I~
+East Branch Dyberry Creek~2~Wayne~260411~14~0~86~1230~1~I~
+Lackawaxen River~1~Wayne~260415~14~0~90~0100~1~I~
+Equinunk Creek~3~Wayne~260421~6~0~87~0100~0~I~
+Shehawken Creek~1~Wayne~260421~4~0~87~0100~0~I~
+West Branch Wallenpaupack Creek~2~Wayne~260422~14~0~37~1215~1~I~
+West Branch Wallenpaupack Creek~3~Wayne~260422~14~0~37~1215~1~I~
+Dyberry Creek~2~Wayne~260423~14~0~85~0100~1~I~
+Dyberry Creek~3~Wayne~260423~6~0~85~0100~1~I~
+Dyberry Creek~4~Wayne~260423~14~0~85~0100~1~I~
+Van Auken Creek~2~Wayne~260423~14~0~85~0100~1~I~
+Lackawaxen River~3~Wayne~260427~14~0~51~0100~0~I~
+Lackawanna River~1~Wayne~260428~14~0~31~1230~1~I~
+East Branch Dyberry Creek~2~Wayne~260506~6~0~88~0100~1~I~
+West Branch Dyberry Creek~2~Wayne~260506~14~0~88~0100~1~I~
+Bowman Creek~2~Wyoming~260511~2~1~91~1200~0~I~
+Bowman Creek~3~Wyoming~260511~2~1~91~1200~0~I~
+Bowman Creek~4~Wyoming~260511~2~1~91~1200~0~I~
+Bowman Creek~4~Wyoming~261005~2~1~35~1230~0~F~0
+Bowman Creek~5~Wyoming~260511~14~1~91~1200~0~I~
+Martins Creek~3~Wyoming~260406~14~1~32~1230~0~I~
+Bowman Creek~5~Wyoming~260305~14~0~91~1200~0~P~
+Leonard Creek~2~Wyoming~260305~4~0~91~1200~0~P~
+Martins Creek~3~Wyoming~260310~12~0~76~1200~0~P~
+Mehoopany Creek~4~Wyoming~260318~3~0~68~0100~0~P~
+North Branch Mehoopany Creek~2~Wyoming~260318~11~0~68~0100~0~P~
+South Branch Tunkhannock Creek~4~Wyoming~260319~14~0~35~0130~0~P~
+South Branch Tunkhannock Creek~5~Wyoming~260319~12~0~35~0130~0~P~
+Bowman Creek~2~Wyoming~260325~2~0~91~1145~0~P~
+Bowman Creek~3~Wyoming~260325~2~0~91~1145~0~P~
+Bowman Creek~4~Wyoming~260325~2~0~91~1145~0~P~
+Tuscarora Creek~2~Wyoming~260325~14~0~4~1230~0~P~
+Meshoppen Creek~2~Wyoming~260331~14~0~78~0100~0~P~
+Meshoppen Creek~4~Wyoming~260331~14~0~78~0100~0~P~
+West Branch Meshoppen Creek~2~Wyoming~260331~14~0~78~0100~0~P~
+Horton Creek~2~Wyoming~260408~4~0~81~0100~0~I~
+Meshoppen Creek~2~Wyoming~260415~14~0~82~0100~0~I~
+Meshoppen Creek~4~Wyoming~260415~14~0~82~0100~0~I~
+Riley Creek~2~Wyoming~260415~4~0~82~0100~0~I~
+West Branch Meshoppen Creek~2~Wyoming~260415~14~0~82~0100~0~I~
+Tuscarora Creek~2~Wyoming~260421~14~0~4~1200~0~I~
+Mehoopany Creek~3~Wyoming~260424~2~0~68~1200~0~I~2
+Mehoopany Creek~4~Wyoming~260424~3~0~68~1200~0~I~2
+North Branch Mehoopany Creek~2~Wyoming~260424~14~0~68~1200~0~I~2
+South Branch Tunkhannock Creek~4~Wyoming~260428~14~0~35~0115~0~I~
+South Branch Tunkhannock Creek~5~Wyoming~260428~14~0~35~0115~0~I~
+Leonard Creek~2~Wyoming~260511~4~0~91~1200~0~I~
+South Branch Tunkhannock Creek~4~Wyoming~261005~6~0~35~1230~0~F~0
+Kistler Creek~2~Lehigh~260224~4~0~92~1215~2~P~
+Ontelaunee Creek~2~Lehigh~260224~14~0~92~1215~2~P~
+Ontelaunee Creek~4~Lehigh~260224~14~0~92~1215~2~P~
+Switzer Creek~2~Lehigh~260224~12~0~92~1215~2~P~
+Monocacy Creek~9~Lehigh~260225~4~0~93~1230~1~P~
+Little Lehigh Creek~7~Lehigh~260226~12~0~94~1245~2~P~
+Little Lehigh Creek~9~Lehigh~260226~12~0~94~1245~2~P~
+Jordan Creek~2~Lehigh~260303~14~0~95~1245~2~P~
+Cedar Creek~3~Lehigh~260304~4~0~94~1245~2~P~
+Coplay Creek~2~Lehigh~260304~5~0~94~1245~2~P~
+Jordan Creek~3~Lehigh~260305~14~0~95~1245~2~P~6
+Jordan Creek~4~Lehigh~260305~14~0~95~1245~2~P~6
+Laurel Run~2~Lehigh~260306~4~0~96~1245~2~P~
+Little Lehigh Creek~2~Lehigh~260306~4~0~96~1245~2~P~
+Little Lehigh Creek~5~Lehigh~260306~12~0~96~1245~2~P~
+Swabia Creek~2~Lehigh~260306~14~0~96~1245~2~P~
+Jordan Creek~6~Lehigh~260312~14~0~97~1245~2~P~
+Little Lehigh Creek~4~Lehigh~260314~12~0~98~1245~2~P~11
+Trout Creek~2~Lehigh~260320~12~0~99~1230~2~P~
+Lehigh Canal~8~Lehigh~260326~12~0~100~1230~1~P~
+Lehigh Canal~8~Lehigh~260407~12~0~100~1230~1~I~
+Little Lehigh Creek~4~Lehigh~260410~4~0~96~1245~2~I~
+Little Lehigh Creek~5~Lehigh~260410~12~0~96~1245~2~I~
+Swabia Creek~2~Lehigh~260410~14~0~96~1245~2~I~
+Jordan Creek~2~Lehigh~260411~14~0~95~1245~2~I~
+Cedar Creek~3~Lehigh~260413~4~0~94~1245~2~I~
+Little Lehigh Creek~7~Lehigh~260413~4~0~94~1245~2~I~
+Little Lehigh Creek~9~Lehigh~260413~12~0~94~1245~2~I~
+Monocacy Creek~9~Lehigh~260413~4~0~93~1230~1~I~13
+Coplay Creek~2~Lehigh~260414~4~0~95~1245~2~I~
+Jordan Creek~4~Lehigh~260414~14~0~95~1245~2~I~
+Jordan Creek~3~Lehigh~260415~14~0~95~1245~2~I~
+Switzer Creek~2~Lehigh~260415~14~0~95~1245~2~I~
+Ontelaunee Creek~2~Lehigh~260421~6~0~92~1215~2~I~
+Ontelaunee Creek~4~Lehigh~260421~6~0~92~1215~2~I~
+Cedar Creek~3~Lehigh~260422~4~0~96~1245~2~I~
+Little Lehigh Creek~9~Lehigh~260422~4~0~96~1245~2~I~
+Swabia Creek~2~Lehigh~260422~14~0~96~1245~2~I~
+Jordan Creek~6~Lehigh~260428~14~0~97~1245~2~I~
+Jordan Creek~6~Lehigh~260428~14~0~97~1245~2~I~12
+Coplay Creek~2~Lehigh~260429~4~0~101~1245~2~I~
+Trout Creek~2~Lehigh~260429~4~0~101~1245~2~I~
+Jordan Creek~4~Lehigh~260430~14~0~95~1245~2~I~
+Little Lehigh Creek~9~Lehigh~261013~4~0~94~1230~2~F~0
+Martins Creek~3~Northampton~260413~4~1~102~1230~1~I~
+Little Bushkill Creek~2~Northampton~260223~6~0~102~1230~1~P~
+Little Bushkill Creek~4~Northampton~260223~14~0~102~1230~1~P~
+Monocacy Creek~3~Northampton~260225~12~0~93~1230~1~P~
+Monocacy Creek~5~Northampton~260225~12~0~93~1230~1~P~
+Monocacy Creek~8~Northampton~260225~4~0~93~1230~1~P~
+Monocacy Creek~9~Northampton~260225~4~0~93~1230~1~P~
+Saucon Creek~4~Northampton~260227~12~0~100~1230~1~P~14
+Hokendauqua Creek~2~Northampton~260228~15~0~103~1245~1~P~
+Hokendauqua Creek~4~Northampton~260228~15~0~103~1245~1~P~
+Hokendauqua Creek~5~Northampton~260228~15~0~103~1245~1~P~
+Indian Creek~2~Northampton~260228~15~0~103~1245~1~P~
+Bushkill Creek~2~Northampton~260314~14~0~104~1230~1~P~
+Bushkill Creek~5~Northampton~260314~7~0~104~1230~1~P~
+Bushkill Creek~7~Northampton~260314~14~0~104~1230~1~P~
+Lehigh Canal~5~Northampton~260323~12~0~105~1200~1~P~
+Jacoby Creek~2~Northampton~260325~14~0~102~1230~1~P~7
+Martins Creek~1~Northampton~260325~4~0~102~1230~1~P~7
+Martins Creek~3~Northampton~260325~4~0~102~1230~1~P~7
+Lehigh Canal~8~Northampton~260326~12~0~100~1230~1~P~
+Monocacy Creek~3~Northampton~260406~12~0~93~1230~1~I~
+Monocacy Creek~5~Northampton~260406~12~0~93~1230~1~I~
+Monocacy Creek~8~Northampton~260406~4~0~93~1230~1~I~
+Saucon Creek~4~Northampton~260406~12~0~93~1230~1~I~
+Lehigh Canal~8~Northampton~260407~12~0~100~1230~1~I~
+Hokendauqua Creek~2~Northampton~260409~14~0~103~1245~1~I~
+Hokendauqua Creek~4~Northampton~260409~14~0~103~1245~1~I~
+Hokendauqua Creek~5~Northampton~260409~14~0~103~1245~1~I~
+Indian Creek~2~Northampton~260409~12~0~103~1245~1~I~
+Monocacy Creek~3~Northampton~260413~4~0~93~1230~1~I~13
+Monocacy Creek~5~Northampton~260413~4~0~93~1230~1~I~13
+Monocacy Creek~9~Northampton~260413~4~0~93~1230~1~I~13
+Saucon Creek~4~Northampton~260413~4~0~93~1230~1~I~13
+Lehigh Canal~5~Northampton~260415~12~0~105~1230~1~I~
+Jacoby Creek~2~Northampton~260416~14~0~102~1230~1~I~
+Martins Creek~1~Northampton~260416~4~0~102~1230~1~I~
+Bushkill Creek~2~Northampton~260420~14~0~104~1230~1~I~
+Bushkill Creek~5~Northampton~260420~7~0~104~1230~1~I~
+Bushkill Creek~7~Northampton~260420~14~0~104~1230~1~I~
+Little Bushkill Creek~2~Northampton~260420~6~0~104~1230~1~I~
+Hokendauqua Creek~4~Northampton~260424~14~0~103~1245~1~I~
+Hokendauqua Creek~5~Northampton~260424~14~0~103~1245~1~I~
+Bushkill Creek~5~Northampton~260427~7~0~104~1230~1~I~
+Bushkill Creek~7~Northampton~260427~6~0~104~1230~1~I~
+Little Bushkill Creek~4~Northampton~260427~6~0~104~1230~1~I~
+Little Shamokin Creek~2~Northumberland~260413~6~1~106~1100~0~I~
+Little Shamokin Creek~4~Northumberland~260504~6~1~107~1100~0~I~
+Little Shamokin Creek~4~Northumberland~260413~14~1~106~1100~0~I~
+Little Shamokin Creek~2~Northumberland~260304~14~0~106~1000~0~P~
+Little Shamokin Creek~4~Northumberland~260304~14~0~106~1000~0~P~
+Mahantango Creek~3~Northumberland~260305~14~0~59~1130~0~P~1
+South Branch Roaring Creek~6~Northumberland~260311~14~0~25~1145~1~P~
+Schwaben Creek~2~Northumberland~260325~14~0~108~1045~0~P~
+Mahantango Creek~3~Northumberland~260410~14~0~59~1130~0~I~
+Schwaben Creek~2~Northumberland~260430~14~0~108~1045~0~I~
+South Branch Roaring Creek~6~Northumberland~260506~14~0~25~1145~1~I~
+Roaring Creek~2~Montour~260504~14~1~22~1045~1~I~2
+Roaring Creek~3~Montour~260504~14~1~22~1045~1~I~2
+Mahoning Creek~3~Montour~260303~12~0~109~1000~0~P~
+Mauses Creek~2~Montour~260303~4~0~109~1000~0~P~
+Roaring Creek~2~Montour~260311~12~0~25~1145~1~P~
+Roaring Creek~3~Montour~260311~12~0~25~1145~1~P~
+Mahoning Creek~3~Montour~260408~14~0~109~1045~0~I~
+Mahoning Creek~3~Montour~260422~14~0~109~1030~0~I~`};
+
+/* ---------- PFBC stocking schedule (static snapshot of the 2026 season) ---------- */
+const SCH=new Map();
+(function(){SCHED.lines.split('\n').forEach(l=>{const a=l.split('~');if(a.length<10)return;
+  const e={n:a[0],sec:+a[1],co:a[2],d:'20'+a[3].slice(0,2)+'-'+a[3].slice(2,4)+'-'+a[3].slice(4,6),sp:+a[4],wk:a[5]==='1',pl:(SCHED.places[+a[6]]||'').trim(),tm:a[7],ha:SCHED.hat[+a[8]]||'',ty:a[9],nt:(a[10]!==undefined&&a[10]!=='')?SCHED.notes[+a[10]]:''};
+  const k=norm(e.n);(SCH.get(k)||SCH.set(k,[]).get(k)).push(e)})})();
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtD=s=>MON[+s.slice(5,7)-1]+' '+(+s.slice(8,10))+', '+s.slice(0,4);
+const fmtDs=s=>MON[+s.slice(5,7)-1]+' '+(+s.slice(8,10));
+const fmtT=t=>{let h=+t.slice(0,2),m=t.slice(2);const pm=h<7||h===12;if(h>12)h-=12;return h+':'+m+(pm?' PM':' AM')};
+const TYN={P:'preseason',I:'in-season',F:'fall'};
+const spMask=m=>['Brook','Brown','Rainbow','Golden'].filter((_,i)=>m&(1<<i)).join(', ');
+const todayS=()=>{const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+const dayDiff=s=>Math.round((Date.parse(s+'T00:00:00')-Date.parse(todayS()+'T00:00:00'))/864e5);
+function buildSchedule(d){
+  const cs=new Set(d.cos.concat(d.endCos||[]));const seen=new Set();
+  const ev=(SCH.get(norm(d.n))||[]).filter(e=>!cs.size||cs.has(e.co)).filter(e=>{const k=e.sec+'|'+e.d+'|'+e.co;if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.sec-b.sec);
+  d.sch=ev;d.schUp=null;d.schLast=null;const t=todayS();
+  ev.forEach(e=>{if(e.nt==='CANCELLED')return;if(e.d>=t){if(!d.schUp)d.schUp=e}else d.schLast=e})}
+const schDays=d=>d.schUp?dayDiff(d.schUp.d):null;
+function schSummary(d){
+  if(!d.sch||!d.sch.length)return '';
+  const e=d.schUp||d.schLast,pre=d.schUp?'Next':'Last';
+  return pre+': '+(e.wk?'week of ':'')+fmtDs(e.d)+' ('+(TYN[e.ty]||'')+')'+(d.schUp?'':' · none upcoming')}
+function schTable(d){
+  if(!d.sch||!d.sch.length)return '<p class="stat" style="margin:8px 0 0"><b>Stocking schedule:</b> no dates found on the PFBC '+SCHED.season+' schedule for this stream name.</p>';
+  const t=todayS(),rows=d.sch.map(e=>{const up=e.d>=t&&e.nt!=='CANCELLED';
+    return '<div class="e'+(up?' up':'')+'"><b>'+(e.wk?'Week of ':'')+fmtD(e.d)+'</b> · '+esc(TYN[e.ty]||'')+' · Sec '+e.sec+(e.nt?' <span class="warn">['+esc(e.nt)+']</span>':'')+
+      '<br><span class="k">'+esc(spMask(e.sp)||'species n/a')+(e.tm?' · meet '+fmtT(e.tm):'')+(e.ha?' · '+esc(e.ha)+' hatchery':'')+(e.pl?'<br>'+esc(e.pl):'')+'</span></div>'});
+  return '<div class="sch"><b>PFBC stocking schedule '+SCHED.season+'</b> <span class="k">(snapshot '+fmtD(SCHED.snap)+')</span>'+rows.join('')+'<div class="k" style="margin-top:4px">Meeting place and time are where volunteers meet the truck; stocking can change with weather or water conditions. Confirm on the PFBC site.</div></div>'}
+
+/* ---------- build the stream directory from the raw layers ---------- */
+const SPN={'Brook':'Brook trout','Brown':'Brown trout','Mixed Brook/Brown':'Brook + brown trout'};
+function species(f){f=String(f||'').trim();if(SPN[f])return SPN[f];if(/Mixed/.test(f))return 'Brook + brown trout';if(/Brook/.test(f))return 'Brook trout';if(/Brown/.test(f))return 'Brown trout';return ''}
+function lines(g){return !g?[]:g.type==='LineString'?[g.coordinates]:g.type==='MultiLineString'?g.coordinates:[]}
+function mid(g){const ls=lines(g).filter(l=>l.length);if(!ls.length)return null;const b=ls.reduce((a,c)=>c.length>a.length?c:a);const p=b[Math.floor(b.length/2)];return [p[1],p[0]]}
+const cosOf=s=>ALLC.filter(c=>String(s||'').toUpperCase().includes(c.toUpperCase()));
+const secText=p=>{const ks=Object.keys(p);const u=ks.find(k=>/upper/i.test(k)&&p[k]&&String(p[k]).trim().length>1),l=ks.find(k=>/lower/i.test(k)&&p[k]&&String(p[k]).trim().length>1);return u&&l?String(p[u]).trim()+' to '+String(p[l]).trim():''};
+const SPK=['Brook','Brown','Rainbow','Golden'];
+let SPG=new Map(),SPN2=new Map();
+function buildSpeciesIndex(){SPG=new Map();SPN2=new Map();
+  const put=(m,k,p)=>{if(!k)return;const a=m.get(k)||m.set(k,{Brook:0,Brown:0,Rainbow:0,Golden:0,yrs:new Set()}).get(k);
+    SPK.forEach(s=>{a[s]+=+p['Total'+s+'Stocked']||0});if(p.StockingYear)a.yrs.add(p.StockingYear)};
+  FEAT.sp26.concat(FEAT.sp25).forEach(f=>{const p=f.properties;put(SPG,p.GIS_Key,p);put(SPN2,norm(p.WtrName)+'|'+String(p.County||'').toUpperCase(),p)})}
+/* a stream 'belongs' to the counties that hold its start or end (its two true extremities) */
+let CTY=[];
+function buildCountyIndex(){CTY=[];FEAT.county.forEach(f=>{const g=f.geometry;if(!g)return;const rings=g.type==='Polygon'?g.coordinates:g.type==='MultiPolygon'?[].concat(...g.coordinates):[];
+  const name=ALLC.find(c=>c.toUpperCase()===String(f.properties.COUNTY_NAM||'').trim().toUpperCase());if(!name||!rings.length)return;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;rings.forEach(r=>r.forEach(p=>{if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}));CTY.push({name,x0,y0,x1,y1,rings})})}
+const countyAt=(x,y)=>{for(const c of CTY)if(x>=c.x0&&x<=c.x1&&y>=c.y0&&y<=c.y1&&inRings(x,y,c.rings))return c.name;return null};
+function endCounties(feats){
+  const pts=[];feats.forEach(f=>lines(f.geometry).forEach(l=>{if(l.length>1){pts.push(l[0]);pts.push(l[l.length-1])}}));
+  const T=.0004;let ends=pts.filter((p,i)=>!pts.some((q,j)=>j!==i&&Math.abs(p[0]-q[0])<T&&Math.abs(p[1]-q[1])<T));
+  if(!ends.length)ends=pts;
+  return [...new Set(ends.map(p=>countyAt(p[0],p[1])).filter(Boolean))]}
+const selCounties=()=>[...document.querySelectorAll('.cc:checked')].map(x=>x.value).filter(c=>LOADED.has(c));
+function buildDirectory(){buildCountyIndex();buildSpeciesIndex();
+  const items=[];
+  const add=(layer,arr,nf)=>arr.forEach(f=>{const nm=String(f.properties[nf]||'').trim();if(!nm||!f.geometry)return;f.layer=layer;f.nk=norm(nm);f.bb=bounds(f.geometry);items.push(f)});
+  add('wild',FEAT.wild,'WtrName');add('stocked',FEAT.stocked,'GNIS_Name');add('special',FEAT.special,'WtrName');add('classa',FEAT.classa,'WtrName');
+  const groups=new Map();items.forEach(f=>{(groups.get(f.nk)||groups.set(f.nk,[]).get(f.nk)).push(f)});
+  const G2=.02,ov=(a,b)=>a[0]-G2<=b[2]&&a[2]+G2>=b[0]&&a[1]-G2<=b[3]&&a[3]+G2>=b[1];
+  const clusters=[];
+  groups.forEach((arr,k)=>{const par=arr.map((_,i)=>i),find=i=>par[i]===i?i:(par[i]=find(par[i]));
+    for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++)if(ov(arr[i].bb,arr[j].bb)){const a=find(i),b=find(j);if(a!==b)par[a]=b}
+    const m=new Map();arr.forEach((f,i)=>{const r=find(i);(m.get(r)||m.set(r,[]).get(r)).push(f)});
+    [...m.values()].sort((a,b)=>Math.min(...a.map(f=>f.bb[0]))-Math.min(...b.map(f=>f.bb[0]))).forEach((c,i)=>clusters.push({k,i,c}))});
+  DIR=[];byId=new Map();BYSID=new Map();
+  clusters.forEach(({k,i,c})=>{
+    if(!c.some(f=>f.layer!=='classa'))return;           // Class A segments outside the loaded counties
+    const sid=k+'#'+i,d={sid,n:c[0].properties.WtrName||c[0].properties.GNIS_Name,la:'',lo:'',ws:0,wm:0,pmw:0,st:'N',yr:'',sm:0,ss:[],sr:new Set(),rs:[],fi:new Set(),cl:[],sps:new Set(),cos:new Set()};
+    let classA=false;
+    c.sort((a,b)=>(a.layer==='wild'?0:1)-(b.layer==='wild'?0:1));
+    c.forEach(f=>{f.sid=sid;const p=f.properties;
+      (BYSID.get(sid)||BYSID.set(sid,[]).get(sid)).push(f);
+      if(!d.la){const m=mid(f.geometry);if(m){d.la=m[0];d.lo=m[1]}}
+      if(f.layer==='wild'){const mi=+p.Tot_Length_MI||0,pc=p.Percent_PublicLand;d.ws++;d.wm+=mi;if(pc!=null&&pc!=='')d.pmw+=mi*pc;if(p.Trib)d.fi.add(String(p.Trib).trim());cosOf(p.County).forEach(x=>d.cos.add(x))}
+      else if(f.layer==='stocked'){d.st='Y';d.sm+=+p.Length_MI_||0;if(p.Limits)d.ss.push(String(p.Limits).trim());if(p.Year_Round==='Y')d.yr='Y';
+        const rn=String(p.Reg_Name||'');if(/Artificial|Delayed/.test(rn))d.sr.add(rn);cosOf(p.County).forEach(x=>d.cos.add(x))}
+      else if(f.layer==='special'){const r1=[p.Spec_Reg_1,p.Spec_Reg_2].filter(Boolean).map(s=>String(s).trim()).join('; ');if(r1)d.sr.add(r1);const s=secText(p);if(s)d.rs.push(s);cosOf(p.CountyString).forEach(x=>d.cos.add(x))}
+      else if(f.layer==='classa'){classA=true;const sp=species(p.Fishery);if(sp)d.sps.add(sp)}});
+    if(d.st==='Y'&&d.yr==='')d.yr='N';
+    const cl=[];if(classA)cl.push('Class A wild');if(d.ws)cl.push('Wild trout');if(d.st==='Y')cl.push('Stocked');
+    d.cl=cl.join(' + ');d.tier=classA?'Class A wild':d.ws>0?'Wild trout':'Stocked only';
+    const sp=[...d.sps].sort();d.sp=sp.length>1?'Brook + brown trout':(sp[0]||'');
+    // species stocked in 2025-2026, joined to this stream's stocked sections
+    d.stk={Brook:0,Brown:0,Rainbow:0,Golden:0};const yrs=new Set();
+    (BYSID.get(sid)||[]).filter(f=>f.layer==='stocked').forEach(f=>{const p=f.properties;
+      const a=SPG.get(p.GIS_Key)||SPN2.get(norm(p.GNIS_Name)+'|'+String(p.County||'').toUpperCase());
+      if(a){SPK.forEach(s=>{d.stk[s]=Math.max(d.stk[s],a[s])});a.yrs.forEach(y=>yrs.add(y))}});
+    d.stkL=SPK.filter(s=>d.stk[s]>0);d.stkYrs=[...yrs].sort().join(', ');
+    d.all=new Set();d.sps.forEach(s=>{if(/Brook/.test(s))d.all.add('Brook trout');if(/Brown/.test(s))d.all.add('Brown trout');if(/\+/.test(s)){d.all.add('Brook trout');d.all.add('Brown trout')}});
+    d.stkL.forEach(s=>d.all.add(s+' trout'));
+    d.spc=d.sp||(d.stkL.length===1?d.stkL[0]+' trout':d.stkL.length>1?'Stocked mix':'Not reported');
+    d.spSrc=d.sp?'Class A survey'+(d.stkL.length?' + stocking':''):d.stkL.length?'stocking records':'';
+    d.pp=d.wm?Math.round(d.pmw/d.wm*10)/10:'';d.pub=d.wm?d.pp:null;d.pm=d.wm?d.pmw/100:0;
+    d.sr=[...d.sr].join('; ');d.reg=!!d.sr;d.rs=d.rs.join(' | ');d.ss=d.ss.join(' | ');d.fi=[...d.fi].join('; ');
+    d.cos=[...d.cos];d.co=d.cos.join(', ');d.endCos=endCounties(BYSID.get(sid)||[]);buildSchedule(d);
+    DIR.push(d);byId.set(sid,d)})}
+
+/* ---------- split each stream into sections by land access ---------- */
+let GRID=new Map();const GS=.02;
+/* level 2 = open public land, 1 = restricted / unknown access, 0 = no public-land record */
+function addLand(feats,levelOf){feats.forEach(f=>{const g=f.geometry,lv=levelOf(f.properties);if(!g||!lv)return;
+  const rings=g.type==='Polygon'?g.coordinates:g.type==='MultiPolygon'?[].concat(...g.coordinates):[];if(!rings.length)return;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;rings.forEach(r=>r.forEach(p=>{if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}));
+  const e={x0,y0,x1,y1,rings,lv};
+  for(let i=Math.floor(x0/GS);i<=Math.floor(x1/GS);i++)for(let j=Math.floor(y0/GS);j<=Math.floor(y1/GS);j++){const k=i+','+j;(GRID.get(k)||GRID.set(k,[]).get(k)).push(e)}
+  HASLAND=true})}
+function buildLandIndex(){GRID=new Map();HASLAND=false;
+  addLand(FEAT.pub,p=>PUBSTYLE[p.LandManager]?2:0);
+  addLand(FEAT.pfbcp,()=>2);
+  addLand(FEAT.cons,p=>p.Access==='Open'?2:(p.Access==='Restricted'||p.Access==='Unknown')?1:0)}
+function inRings(x,y,rings){let ins=false;for(const r of rings){for(let i=0,j=r.length-1;i<r.length;j=i++){const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];
+  if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)ins=!ins}}return ins}
+function landLevel(x,y){const c=GRID.get(Math.floor(x/GS)+','+Math.floor(y/GS));if(!c)return 0;let best=0;
+  for(const p of c){if(p.lv>best&&x>=p.x0&&x<=p.x1&&y>=p.y0&&y<=p.y1&&inRings(x,y,p.rings)){best=p.lv;if(best===2)break}}return best}
+const mDist=(a,b)=>Math.hypot((b[0]-a[0])*Math.cos(a[1]*Math.PI/180)*111320,(b[1]-a[1])*111320);
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+function splitCoords(c){const parts=[];let cur=null;
+  for(let i=0;i<c.length-1;i++){const a=c[i],b=c[i+1],n=Math.max(1,Math.ceil(mDist(a,b)/25));
+    for(let j=0;j<n;j++){const m=lerp(a,b,(j+.5)/n),s=landLevel(m[0],m[1]);
+      if(!cur||cur.lv!==s){cur={lv:s,c:[lerp(a,b,j/n)]};parts.push(cur)}cur.c.push(lerp(a,b,(j+1)/n))}}
+  return parts}
+function featParts(f){const out=[];lines(f.geometry).forEach(c=>splitCoords(c).forEach(p=>out.push({type:'Feature',properties:f.properties,sid:f.sid,lv:p.lv,
+  len:p.c.slice(1).reduce((s,q,i)=>s+mDist(p.c[i],q),0),geometry:{type:'LineString',coordinates:p.c}})));
+  const tot=out.reduce((s,p)=>s+p.len,0),pub=out.reduce((s,p)=>s+(p.lv===2?p.len:0),0);
+  f._pct=tot>0?pub/tot*100:null;out.forEach(p=>p.pct=f._pct);return out}
+const secPct=f=>f._pct!=null?f._pct:f.pct!=null?f.pct:null;
+async function buildParts(setStatus){
+  buildLandIndex();FEAT.wildP=[];FEAT.stockedP=[];Object.keys(ACCESS).forEach(k=>delete ACCESS[k]);
+  if(!HASLAND)return;
+  const all=[['wildP',FEAT.wild],['stockedP',FEAT.stocked]];let done=0,tot=FEAT.wild.length+FEAT.stocked.length;
+  for(const [dst,src] of all){for(const f of src){if(!f.sid)continue;
+    if(!f._parts)f._parts=featParts(f);FEAT[dst].push(...f._parts);
+    if(++done%60===0){setStatus&&setStatus('Splitting streams by land access… '+Math.round(done/tot*100)+'%');await tick()}}}
+  const acc=(p)=>{const a=ACCESS[p.sid]||(ACCESS[p.sid]={pub:0,lim:0,priv:0});a[p.lv===2?'pub':p.lv===1?'lim':'priv']+=p.len/1609.34};
+  FEAT.wildP.forEach(acc);
+  FEAT.stockedP.forEach(p=>{const d=byId.get(p.sid);if(d&&!d.ws)acc(p)});   // stocked-only streams
+  // make every public-land number agree with the map: use the calculated share, not PFBC's estimate
+  DIR.forEach(d=>{const a=ACCESS[d.sid];if(!a)return;const tot=a.pub+a.lim+a.priv;if(tot>0){d.pp=Math.round(a.pub/tot*1000)/10;d.pub=d.pp;d.pm=a.pub}})}
+const accessOK=f=>{const v=$('fAccess').value;return v==='all'||(v==='pub'&&f.lv===2)||(v==='lim'&&f.lv===1)||(v==='priv'&&f.lv===0)};
+
+/* ---------- state ---------- */
+const COL={pubL:'#00e676',lim:'#ffd400',priv:'#ff6d00',classA:'#ff2d55',wild:'#ffe600',stock:'#00e5ff',reg:'#b36bff',na:'#9aa5a8'};
+const SPC={'Brook trout':'#ff2d55','Brown trout':'#00c2ff','Brook + brown trout':'#c06bff','Rainbow trout':'#ff9f1c','Golden trout':'#ffd23f','Stocked mix':'#7ad151','Not reported':'#8a969a'};
+const PUBC=['#9aa5a8','#fde725','#7ad151','#22a884','#2a788e','#414487'];
+const PUBL=['No data','Under 1%','1 to 25%','25 to 50%','50 to 75%','75% or more'];
+const bin=p=>p==null||p===''?0:p<1?1:p<25?2:p<50?3:p<75?4:5;
+function passes(d){
+  if(!d)return !($('fTier').value||$('fSpecies').value||$('fStocked').value||$('fSched').value||$('fReg').value||+$('fPub').value||$('q').value.trim());
+  if($('fTier').value&&d.tier!==$('fTier').value)return false;
+  const fs=$('fSpecies').value;if(fs==='Not reported'){if(d.all.size)return false}else if(fs&&!d.all.has(fs))return false;
+  const s=$('fStocked').value;if(s==='Y'&&d.st!=='Y')return false;if(s==='N'&&d.st==='Y')return false;if(s==='YR'&&d.yr!=='Y')return false;
+  if($('fReg').value==='Y'&&!d.reg)return false;
+  const fsc=$('fSched').value;if(fsc){const dd=schDays(d);if(fsc==='any'&&!(d.sch&&d.sch.length))return false;if(fsc==='up30'&&!(dd!==null&&dd<=30))return false;if(fsc==='up7'&&!(dd!==null&&dd<=7))return false}
+  const sc=selCounties();if(sc.length&&!(d.endCos.length?d.endCos:d.cos).some(c=>sc.includes(c)))return false;
+  const mp=+$('fPub').value;if(mp>0&&!(d.pub!==null&&d.pub>=mp))return false;
+  const t=$('q').value.trim().toLowerCase();if(t&&!d.n.toLowerCase().includes(t))return false;
+  return true}
+function lineColor(p,f){
+  const d=byId.get(f&&f.sid),m=$('colorBy').value;
+  if(m==='access'&&HASLAND)return f&&f.lv===2?COL.pubL:f&&f.lv===1?COL.lim:COL.priv;
+  if(m==='species')return SPC[d?d.spc:'Not reported'];
+  if(m==='public'&&HASLAND){const s=f?secPct(f):null;return PUBC[bin(s)]}
+  if(m==='public')return PUBC[bin(p.Percent_PublicLand)];
+  return d&&d.tier==='Class A wild'?COL.classA:COL.wild}
+
+/* ---------- layers ---------- */
+const G={sgl:L.layerGroup(),sf:L.layerGroup(),sp:L.layerGroup(),county:L.layerGroup(),cons:L.layerGroup(),consL:L.layerGroup(),pfbcp:L.layerGroup(),casing:L.layerGroup(),wild:L.layerGroup(),stocked:L.layerGroup(),special:L.layerGroup(),sel:L.layerGroup()};
+Object.values(G).forEach(g=>g.addTo(map));
+const PUBSTYLE={PGC:['#e8a33a',G.sgl],BOF:['#3fae63',G.sf],BSP:['#8b63e0',G.sp]};
+const cv=pane=>L.svg({pane,padding:.4});
+let selKey=null;
+function drawStatic(){
+  Object.keys(G).filter(k=>['sgl','sf','sp','county','cons','consL','pfbcp'].includes(k)).forEach(k=>G[k].clearLayers());
+  FEAT.pub.forEach(f=>{const p=f.properties,st=PUBSTYLE[p.LandManager];if(!st)return;
+    const name=p.LandManager==='PGC'?'State Game Lands '+(p.SGL_No||''):p.LandManager==='BSP'?(p.StParkName&&p.StParkName!=='NA'?p.StParkName:'State Park'):(p.SF_Name||'State Forest')+' State Forest';
+    L.geoJSON(f,{pane:'public',style:{color:st[0],weight:1.2,fillColor:st[0],fillOpacity:.2,opacity:.8}}).bindTooltip(name,{sticky:true,className:'tt'}).addTo(st[1])});
+  FEAT.cons.forEach(f=>{const p=f.properties,open=p.Access==='Open',c=open?'#19b5a5':'#ffd400';
+    if(!open&&p.Access!=='Restricted'&&p.Access!=='Unknown')return;
+    L.geoJSON(f,{pane:'public',style:{color:c,weight:1,fillColor:c,fillOpacity:open?.22:.18,opacity:.85,dashArray:open?null:'4 3'}})
+      .bindTooltip((p.Name||'Conserved land')+' · '+(p.Type||'')+' · Access: '+(p.Access||'?')+(p.Holder&&p.Holder!=='Unknown'?' · '+p.Holder:''),{sticky:true,className:'tt'}).addTo(open?G.cons:G.consL)});
+  FEAT.pfbcp.forEach(f=>{const p=f.properties;L.geoJSON(f,{pane:'public',style:{color:'#3b82f6',weight:1.2,fillColor:'#3b82f6',fillOpacity:.22,opacity:.9}})
+    .bindTooltip('PFBC: '+(p.PropertyName||'property')+(p.PrimaryUse?' · '+p.PrimaryUse:''),{sticky:true,className:'tt'}).addTo(G.pfbcp)});
+  FEAT.county.forEach(f=>L.geoJSON(f,{pane:'top',interactive:false,style:{color:'#ffffff',weight:2,dashArray:'8 6',fill:false,opacity:.85}}).addTo(G.county))}
+const R={casing:cv('casing'),ghost:cv('ghost'),dim:cv('dim'),lines:cv('lines'),top:cv('top')};
+const HL={off:()=>true,classA:d=>d.tier==='Class A wild',brook:d=>d.all.has('Brook trout'),brown:d=>d.all.has('Brown trout'),rainbow:d=>d.all.has('Rainbow trout'),
+  stocked:d=>d.st==='Y',yr:d=>d.yr==='Y',schAny:d=>!!(d.sch&&d.sch.length),schUp:d=>{const x=schDays(d);return x!==null&&x<=30},reg:d=>d.reg,pub50:d=>d.pub!==null&&d.pub>=50,pub75:d=>d.pub!==null&&d.pub>=75};
+const filtersOn=()=>!!($('fAccess').value!=='all'||$('fTier').value||$('fSpecies').value||$('fStocked').value||$('fSched').value||$('fReg').value||+$('fPub').value||$('q').value.trim());
+const hlOn=()=>$('hlBy').value!=='off';
+const emph=()=>hlOn()||filtersOn();
+const isHL=d=>!hlOn()||(!!d&&HL[$('hlBy').value](d));
+function cls(f){const d=byId.get(f.sid);if(!passes(d))return 'ghost';return isHL(d)?'hi':'dim'}
+function spText(d){const w=d.sp?d.sp+' (wild)':'';const s=d.stkL.length?'Stocked: '+d.stkL.join(', ')+(d.stkYrs?' ('+d.stkYrs+')':''):'';return [w,s].filter(Boolean).join(' · ')||'Not reported'}
+function tipHTML(f){
+  const p=f.properties,d=byId.get(f.sid),nm=(d&&d.n)||p.WtrName||p.GNIS_Name||'Stream';
+  const row=(k,v)=>'<div class="r"><span class="k">'+k+'</span><span>'+v+'</span></div>';
+  const LV=['No public-land record (likely private)','Restricted / unknown access','Open public land'],LC=[COL.priv,COL.lim,COL.pubL];
+  let h='<b class="n">'+esc(nm)+'</b>';
+  if(!d)return h+'<div class="k">Stocked section</div>'+(p.Limits?'<div>'+esc(String(p.Limits).trim())+'</div>':'');
+  h+='<div class="k">'+esc(d.tier)+(d.co?' · '+esc(d.co):'')+'</div>';
+  h+=row('Species',esc(spText(d)));
+  if(d.st==='Y')h+=row('Stocked',f1(d.sm)+' mi'+(d.yr==='Y'?' · year-round':''));
+  if(d.sch&&d.sch.length)h+=row('Schedule',esc(schSummary(d)));
+  h+=row('Regulation',d.sr?esc(d.sr):'Statewide rules');
+  if(typeof f.lv==='number')h+=row('This section','<span style="color:'+LC[f.lv]+'">'+LV[f.lv]+'</span>');
+  const a=ACCESS[d.sid];
+  if(a)h+=row('Whole stream',f1(a.pub)+' mi open · '+f1(a.lim)+' ltd · '+f1(a.priv)+' none');
+  else if(d.pub!==null)h+=row('Public land',f1(d.pp)+'%');
+  if(p.Limits)h+='<div class="k" style="margin-top:4px">'+esc(String(p.Limits).trim().slice(0,110))+'</div>';
+  h+='<div class="k" style="margin-top:4px">Click for full details</div>';return h}
+function draw(){
+  ['casing','wild','stocked','special','sel'].forEach(k=>G[k].clearLayers());
+  const hide=$('hideMode').value==='hide',on=emph(),glow=$('glow').checked,W=+$('weight').value;
+  const click=f=>e=>{L.DomEvent.stopPropagation(e);select(f.sid,f.properties,false,secPct(f),e.latlng,f.lv)};
+  const split=a=>{const o={hi:[],dim:[],ghost:[]};a.forEach(f=>o[cls(f)].push(f));return o};
+  const useParts=HASLAND&&($('colorBy').value==='access'||$('fAccess').value!=='all');
+  const S=split(useParts?FEAT.stockedP.filter(accessOK):FEAT.stocked),Wd=split(useParts?FEAT.wildP.filter(accessOK):FEAT.wild),P=split(FEAT.special);
+  const bind=(f,l)=>{const c=click(f);l.on('click',e=>{c(e);l.closeTooltip()});
+    l.bindTooltip(()=>tipHTML(f),{sticky:true,className:'tt2',direction:'auto',offset:[14,0],opacity:1})};
+  if(!hide)L.geoJSON(S.dim,{pane:'dim',renderer:R.dim,style:{color:COL.stock,weight:8,opacity:.14,lineCap:'round'},onEachFeature:bind}).addTo(G.stocked);
+  L.geoJSON(S.hi,{pane:'casing',renderer:R.casing,style:{color:COL.stock,weight:W+7,opacity:.55,lineCap:'round'},onEachFeature:bind}).addTo(G.stocked);
+  if(!hide)L.geoJSON(Wd.ghost,{pane:'ghost',renderer:R.ghost,interactive:false,style:{color:'#7d8c90',weight:1.5,opacity:.55}}).addTo(G.wild);
+  if(!hide)L.geoJSON(Wd.dim,{pane:'dim',renderer:R.dim,style:f=>({color:lineColor(f.properties,f),weight:2.5,opacity:.4,lineCap:'round'}),interactive:false}).addTo(G.wild);
+  const casing=on&&glow?{color:'#fff',weight:W+5,opacity:.95,lineCap:'round'}:{color:'#000',weight:W+3,opacity:.45,lineCap:'round'};
+  L.geoJSON(Wd.hi,{pane:'casing',renderer:R.casing,interactive:false,style:casing}).addTo(G.casing);
+  L.geoJSON(Wd.hi,{pane:'lines',renderer:R.lines,style:f=>({color:lineColor(f.properties,f),weight:W,opacity:1,lineCap:'round'}),interactive:false}).addTo(G.wild);
+  L.geoJSON(Wd.hi.concat(hide?[]:Wd.dim),{pane:'top',renderer:R.top,style:{color:'#000',weight:18,opacity:.001,fill:false,lineCap:'round'},onEachFeature:bind}).addTo(G.wild);
+  L.geoJSON(P.hi,{pane:'top',renderer:R.top,interactive:false,style:{color:COL.reg,weight:Math.max(3,W-1),dashArray:'2 7',opacity:1}}).addTo(G.special);
+  if(!hide)L.geoJSON(P.dim,{pane:'dim',renderer:R.dim,interactive:false,style:{color:COL.reg,weight:2,dashArray:'2 7',opacity:.35}}).addTo(G.special);
+  syncLayers();renderLegend();renderList();if(selKey)highlight(selKey);else setDim(false)}
+const TOG=[['lyWild',G.wild],['lyWild',G.casing],['lyStocked',G.stocked],['lySpecial',G.special],['lySGL',G.sgl],['lySF',G.sf],['lySP',G.sp],['lyCons',G.cons],['lyConsL',G.consL],['lyPfbc',G.pfbcp],['lyCounty',G.county]];
+function syncLayers(){TOG.forEach(([id,g])=>{const on=$(id).checked;if(on&&!map.hasLayer(g))g.addTo(map);if(!on&&map.hasLayer(g))map.removeLayer(g)})}
+TOG.forEach(([id])=>$(id).addEventListener('change',syncLayers));
+
+/* ---------- selection ---------- */
+const linesFor=key=>BYSID.get(key)||[];
+/* selected stream: pulsing magenta glow, white outline and a bright core on top; every other stream fades back */
+function setDim(on){['casing','ghost','dim','lines'].forEach(n=>{const p=map.getPane(n);if(p)p.style.opacity=on?.28:1})}
+function highlight(key){G.sel.clearLayers();
+  const fs=linesFor(key).filter(f=>f.layer==='wild'||f.layer==='stocked');if(!fs.length){setDim(false);return}
+  const W=+$('weight').value,mk=(w,c,o,cn)=>L.geoJSON(fs,{pane:'sel',interactive:false,className:cn||'',style:{color:c,weight:w,opacity:o,lineCap:'round',lineJoin:'round',className:cn||''}}).addTo(G.sel);
+  mk(W+18,'#ff1fa9',.45,'selglow');mk(W+8,'#ffffff',1);mk(W+2,'#ff1fa9',1);setDim(true)}
+let DETAIL='';
+let POP=null;
+function openPop(ll,html,pan){if(POP)map.closePopup(POP);
+  POP=L.popup({className:'pop2',maxWidth:300,minWidth:250,autoPan:pan,autoPanPadding:[40,40],closeOnClick:true,offset:[0,-4]}).setLatLng(ll).setContent(html).openOn(map)}
+function popHTML(d,props,pct,lv){
+  const row=(k,v)=>'<div class="r"><span class="k">'+k+'</span><span>'+v+'</span></div>';
+  const LV=['No public-land record (likely private)','Restricted / unknown access','Open public land'],LC=[COL.priv,COL.lim,COL.pubL];
+  if(!d)return '<b class="n">'+esc((props&&(props.WtrName||props.GNIS_Name))||'Stream')+'</b><div class="k">Stocked section</div>'+(props&&props.Limits?'<div>'+esc(String(props.Limits).trim())+'</div>':'');
+  const a=ACCESS[d.sid];
+  let h='<b class="n">'+esc(d.n)+'</b><div class="k">'+esc(d.cl)+(d.co?' · '+esc(d.co)+' Co.':'')+'</div>';
+  h+=row('Species',esc(spText(d)));
+  if(d.fi)h+=row('Flows into',esc(d.fi));
+  if(typeof lv==='number')h+=row('This spot','<span style="color:'+LC[lv]+'">'+LV[lv]+'</span>');
+  if(pct!=null)h+=row('This section',f1(pct)+'% open public land');
+  if(a)h+=row('Whole stream',f1(a.pub)+' mi open · '+f1(a.lim)+' ltd · '+f1(a.priv)+' none');
+  if(d.st==='Y')h+=row('Stocked',f1(d.sm)+' mi'+(d.yr==='Y'?' · year-round':''));
+  if(d.sch&&d.sch.length)h+=row('Schedule',esc(schSummary(d))+(d.sch.length>1?' <span class="k">('+d.sch.length+' dates, see list)</span>':''));
+  h+=row('Regulation',d.sr?esc(d.sr):'Statewide rules');
+  if(props&&props.Limits)h+='<div class="k" style="margin-top:5px">'+esc(String(props.Limits).trim().slice(0,140))+'</div>';
+  return h}
+function select(key,props,zoom,pct,ll,lv){
+  selKey=key;const d=byId.get(key);highlight(key);
+  if(ll)openPop(ll,popHTML(d,props,pct,lv),true);
+  else if(zoom&&d&&d.la!=='')openPop([d.la,d.lo],popHTML(d,props,pct,lv),false);
+  if(zoom){const ls=linesFor(key);if(ls.length)map.fitBounds(L.geoJSON(ls).getBounds(),{padding:[60,60],maxZoom:15})}
+  if(!d){$('detail').innerHTML='<h2>'+esc((props&&(props.WtrName||props.GNIS_Name))||'Stream')+'</h2><div class="tag">Stocked section</div>'+(props&&props.Limits?'<dl><dt>Section</dt><dd>'+esc(props.Limits)+'</dd></dl>':'');return}
+  const a=ACCESS[d.sid];
+  const rows=[['Class',esc(d.cl)],['County',esc(d.co||'n/a')],['Species',esc(spText(d))+(d.spSrc?'<br><span class="k">Source: '+esc(d.spSrc)+'</span>':'')],['Flows into',esc(d.fi||'Not listed')],
+   ['Wild trout',d.ws?f1(d.wm)+' mi in '+d.ws+' section'+(d.ws>1?'s':''):'None listed'],
+   ['Land access',a?'<span style="color:'+COL.pubL+'">'+f1(a.pub)+' mi open public land</span><br><span style="color:'+COL.lim+'">'+f1(a.lim)+' mi restricted / unknown</span><br><span style="color:'+COL.priv+'">'+f1(a.priv)+' mi no public-land record</span>':'No section data'],
+   ['Public land',d.pub===null?'No data':f1(d.pp)+'% (about '+f1(d.pm)+' mi, open public land)'],
+   ['Stocked',d.st==='Y'?f1(d.sm)+' mi'+(d.yr==='Y'?', open year-round':''):'No'],
+   ['Schedule',d.sch&&d.sch.length?esc(schSummary(d))+' <span class="k">('+d.sch.length+' dates)</span>':'None posted'],
+   ['Regulation',d.sr?esc(d.sr):'Standard statewide rules']];
+  let x='';if(d.ss)x+='<p class="stat" style="margin:8px 0 0"><b>Stocked sections:</b> '+esc(d.ss)+'</p>';
+  if(d.rs)x+='<p class="stat" style="margin:6px 0 0"><b>Regulated sections:</b> '+esc(d.rs)+'</p>';
+  if(props&&props.Limits)x+='<p class="stat" style="margin:6px 0 0"><b>This section:</b> '+esc(String(props.Limits).trim())+(pct!=null?' ('+f1(pct)+'% public land)':'')+'</p>';
+  x+=schTable(d);
+  DETAIL='<div class="tag">'+esc(d.tier)+'</div><dl>'+rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join('')+'</dl>'+x;
+  $('detail').innerHTML='<h2>'+esc(d.n)+'</h2><div class="tag">Details are open in the Streams list below</div>';
+  renderList();$('list').closest('details').open=true;
+  const el=$('list').querySelector('.row.active');if(el)setTimeout(()=>el.scrollIntoView({block:'center',behavior:'smooth'}),30)}
+map.on('click',()=>{selKey=null;DETAIL='';G.sel.clearLayers();setDim(false);renderList()});
+
+/* ---------- panel ---------- */
+function renderLegend(){
+  const m=$('colorBy').value;let items;
+  if(m==='species')items=Object.entries(SPC);
+  else if(m==='public')items=PUBL.map((l,i)=>[l,PUBC[i]]);
+  else if(m==='access')items=[['Open public land',COL.pubL],['Restricted / unknown access',COL.lim],['No public-land record (likely private)',COL.priv]];
+  else items=[['Class A wild',COL.classA],['Wild trout',COL.wild]];
+  $('legend').innerHTML=items.map(([l,c])=>'<div><span class="sw" style="background:'+c+'"></span>'+l+'</div>').join('')+'<div><span class="sw" style="background:'+COL.stock+';opacity:.6;height:8px"></span>Stocked section</div>'}
+function renderList(){
+  const v=DIR.filter(passes).sort((a,b)=>a.n.localeCompare(b.n,undefined,{numeric:true,sensitivity:'base'})||(a.co||'').localeCompare(b.co||''));const nh=hlOn()?v.filter(isHL).length:0;
+  const wm=v.reduce((s,d)=>s+d.wm,0),pm=v.reduce((s,d)=>s+d.pm,0),CAP=250;
+  $('cnt').textContent='('+v.length+')';
+  $('stat').innerHTML='<b>'+v.length+'</b> streams · <b>'+f1(wm)+'</b> wild miles · about <b>'+f1(pm)+'</b> public miles'+(hlOn()?' · <b>'+nh+'</b> highlighted':'')+(v.length>CAP?'<br>Showing the first '+CAP+'. Use the filters to narrow the list.':'');
+  $('list').innerHTML=v.slice(0,CAP).map(d=>'<div class="row'+(selKey===d.sid?' active':'')+'" data-k="'+esc(d.sid)+'" style="'+(hlOn()&&!isHL(d)?'opacity:.5':'')+'"><span>'+(hlOn()&&isHL(d)?'★ ':'')+esc(d.n)+(d.cos.length?' <small>'+esc(d.cos.length>1?d.cos[0]+'+':d.cos[0])+'</small>':'')+'</span><small>'+(d.yr==='Y'?'year-round · ':'')+(d.pub===null?d.tier:f1(d.pub)+'% public')+'</small></div>'+(selKey===d.sid&&DETAIL?'<div class="inl">'+DETAIL+'</div>':'')).join('')}
+$('list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r)select(r.dataset.k,null,true)});
+['colorBy','fAccess','fTier','fSpecies','fStocked','fSched','fReg','fPub','hlBy','hideMode','weight','glow'].forEach(i=>$(i).addEventListener('change',draw));
+$('q').addEventListener('input',draw);
+
+/* ---------- counties panel ---------- */
+function buildCountyUI(){
+  const mk=(title,arr)=>'<h4>'+title+'</h4>'+arr.map(c=>'<label class="chk"><input type="checkbox" class="cc" value="'+c+'"'+(c==='Carbon'?' checked':'')+'>'+c+' <small id="cs_'+c+'"></small></label>').join('');
+  $('counties').innerHTML=mk('Northeast PA',NE)+mk('Nearby (optional)',NEAR)}
+function refreshCountyFilter(){
+  LOADED.forEach(c=>{const s=$('cs_'+c);if(s)s.textContent='✓'})}
+let busy=false;
+async function loadChecked(){
+  if(busy)return;const want=[...document.querySelectorAll('.cc:checked')].map(x=>x.value).filter(c=>!LOADED.has(c));
+  if(!want.length){banner('Those counties are already loaded. Check more counties to add them.');return}
+  busy=true;$('btnLoad').disabled=true;$('btnAll').disabled=true;const fails=[];
+  try{
+    for(let i=0;i<want.length;i++){$('status').textContent='Loading '+want[i]+' ('+(i+1)+' of '+want.length+')…';await loadCounty(want[i],fails)}
+    $('status').textContent='Building the stream directory…';await tick();buildDirectory();
+    await buildParts(t=>{$('status').textContent=t});
+    $('status').textContent='Drawing…';await tick();
+    try{drawStatic()}catch(e){banner('Public land drawing failed: '+e.message)}
+    refreshCountyFilter();draw();
+    if(FEAT.county.length)map.fitBounds(L.geoJSON(FEAT.county).getBounds(),{padding:[20,20]});
+    $('status').textContent='Loaded '+LOADED.size+' count'+(LOADED.size>1?'ies':'y')+': '+DIR.length+' streams, '+FEAT.wild.length+' wild and '+FEAT.stocked.length+' stocked sections ('+FEAT.stocked.filter(f=>f.properties.Year_Round==='Y').length+' year-round), '+(FEAT.pub.length+FEAT.cons.length+FEAT.pfbcp.length)+' land parcels';
+    if(!HASLAND)banner('No public land boundaries loaded, so public / private sections cannot be shown. If you are viewing this inside a preview pane, open the file in Chrome or Edge instead.');
+    if(fails.length)banner('Some layers did not load: '+fails.slice(0,6).join(', ')+(fails.length>6?' and '+(fails.length-6)+' more':'')+'. Check your connection and try again.');
+  }catch(e){banner('Loading failed: '+e.message);console.error(e)}
+  busy=false;$('btnLoad').disabled=false;$('btnAll').disabled=false}
+$('btnLoad').addEventListener('click',loadChecked);
+$('btnClear').addEventListener('click',()=>{document.querySelectorAll('.cc').forEach(c=>{c.checked=false});$('cstat').textContent='Checks cleared. Loaded data is kept, and the list and map show every loaded county. Check other counties and press Load checked to add them.';if(DIR.length)draw()});
+$('counties').addEventListener('change',e=>{if(e.target.classList.contains('cc')&&DIR.length)draw()});
+$('btnAll').addEventListener('click',()=>{document.querySelectorAll('.cc').forEach(c=>{c.checked=NE.includes(c.value)});$('cstat').textContent='All 12 NE PA counties checked. Press Load checked. This can take a few minutes, and the map gets heavy with this many streams.'});
+
+/* ---------- boot ---------- */
+buildCountyUI();renderLegend();renderList();loadChecked();
+</script>
+</body>
+</html>
